@@ -1,0 +1,27 @@
+backend exemplo/src/modules/auth/auth.routes.js
+backend exemplo/src/modules/auth/auth.controller.js
+backend exemplo/src/modules/integrations/nodeRed.controller.js
+backend exemplo/src/modules/integrations/nodeRed.routes.js
+backend exemplo/src/modules/cash/cash.controller.js
+backend exemplo/src/modules/cash/cash.routes.js
+backend exemplo/src/modules/recover-order/recoverOrder.routes.js
+backend exemplo/src/modules/recover-order/recoverOrder.controller.js
+backend exemplo/src/modules/products/product.routes.js
+backend exemplo/src/modules/products/product.controller.js
+backend exemplo/src/modules/kitchen/kitchen.controller.js
+backend exemplo/src/modules/kitchen/kitchen.routes.js
+
+
+curl -X POST http://localhost:3006/api/produtos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJhZG1pbkBlc3RvcXVlLmNvbSIsIm5vbWUiOiJBZG1pbmlzdHJhZG9yIiwibml2ZWxfYWNlc3NvIjoiYWRtaW4iLCJpYXQiOjE3NzgwMDI4MzksImV4cCI6MTc3ODA4OTIzOX0.fdkfsunVlquilkWYYn359EetvXmc-STstT0rT4bpnsk" \
+  -d '{
+    "nome": "X-Burger",
+    "categoria": "Lanches",
+    "tipo": "simples",
+    "preco": 18.90,
+    "custo": 8.50,
+    "quantidade_estoque": 20,
+    "unidade": "un",
+    "ativo": true
+  }'

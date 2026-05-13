@@ -1,0 +1,38 @@
+CREATE DATABASE IF NOT EXISTS burger_flow_2_0;
+USE burger_flow_2_0;
+
+CREATE TABLE IF NOT EXISTS usuarios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(100) NOT NULL,
+  email VARCHAR(150) NOT NULL UNIQUE,
+  senha_hash VARCHAR(255) NOT NULL,
+  nivel_acesso ENUM('admin', 'operador', 'cozinha') NOT NULL DEFAULT 'operador',
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS produtos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(150) NOT NULL,
+  categoria VARCHAR(100),
+  tipo ENUM('simples', 'composto', 'combo', 'ingrediente', 'producao_interna') NOT NULL DEFAULT 'simples',
+  preco DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  custo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  quantidade_estoque DECIMAL(10,3) NOT NULL DEFAULT 0.000,
+  unidade VARCHAR(20) NOT NULL DEFAULT 'un',
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS auditoria (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id INT,
+  acao VARCHAR(100) NOT NULL,
+  entidade VARCHAR(100),
+  entidade_id INT,
+  detalhes JSON,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);

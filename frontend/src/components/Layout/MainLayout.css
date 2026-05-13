@@ -1,0 +1,51 @@
+.mainLayout {
+  min-height: 100vh;
+  display: flex;
+  background-color: #f5f5f5;
+}
+
+.sidebar {
+  width: 240px;
+  background-color: rgb(212, 3, 3);
+  color: #fff;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h2 {
+  margin-bottom: 40px;
+  font-size: 26px;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+
+.sidebar nav a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.sidebar nav a:hover {
+  text-decoration: underline;
+}
+
+.sidebar button {
+  padding: 10px;
+  background-color: #fff;
+  color: rgb(212, 3, 3);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 40px;
+}

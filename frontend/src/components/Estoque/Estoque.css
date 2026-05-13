@@ -1,0 +1,112 @@
+.estoquePage {
+  width: 100%;
+}
+
+.estoqueHeader {
+  margin-bottom: 24px;
+}
+
+.estoqueHeader h1 {
+  font-size: 32px;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.estoqueHeader p {
+  color: #666;
+  font-size: 16px;
+}
+
+.estoqueError {
+  background-color: #ffe5e5;
+  color: #b00020;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.estoqueSection {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.estoqueTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.estoqueTable th,
+.estoqueTable td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.estoqueTable th {
+  background-color: #f8f8f8;
+  color: #333;
+}
+
+.estoqueTable input {
+  width: 100px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.btnSalvarEstoque {
+  background-color: #d40303;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnSalvarEstoque:hover {
+  background-color: #a90000;
+}
+.btnEntradaEstoque,
+.btnSaidaEstoque {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: 0.2s ease;
+}
+
+.btnEntradaEstoque {
+  background-color: #198754;
+  color: #fff;
+}
+
+.btnEntradaEstoque:hover {
+  background-color: #146c43;
+}
+
+.btnSaidaEstoque {
+  background-color: #b00020;
+  color: #fff;
+}
+
+.btnSaidaEstoque:hover {
+  background-color: #870018;
+}
+.historicoSection {
+  margin-top: 24px;
+}
+
+.historicoSection h2 {
+  margin-bottom: 16px;
+  color: #222;
+}
+
+.estoqueTable td:nth-child(3) {
+  font-weight: 600;
+  text-transform: capitalize;
+}

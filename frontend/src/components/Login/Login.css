@@ -1,0 +1,67 @@
+.LoginPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  border-radius: 10px;
+  background-color: #f5f5f5;
+}
+img {
+  width: 150px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
+h1 {
+  font-size: 38px;
+  font-style: italic;
+  font-weight: 600;
+  margin: 20px 0;
+}
+.wrapperLoginPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.loginform {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+}
+
+.loginform input {
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.loginform input:focus {
+  border-color: rgb(212, 3, 3);
+  outline: none;
+}
+
+.loginform button {
+  padding: 10px;
+  background-color: rgb(212, 3, 3);
+  color: #fff;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+.loginform button:hover {
+  background-color: #f30909;
+  color: #fff;
+}
+
+.messagemError {
+  color: rgb(212, 3, 3);
+  font-size: 14px;
+  margin-bottom: 15px;
+  text-align: center;
+}

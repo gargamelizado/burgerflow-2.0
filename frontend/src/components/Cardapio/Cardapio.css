@@ -1,0 +1,242 @@
+.cardapioPage {
+  width: 100%;
+}
+
+.cardapioHeader {
+  margin-bottom: 24px;
+}
+
+.cardapioHeader h1 {
+  font-size: 32px;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.cardapioHeader p {
+  color: #666;
+  font-size: 16px;
+}
+
+.cardapioError {
+  background-color: #ffe5e5;
+  color: #b00020;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.cardapioForm {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.cardapioForm input,
+.cardapioForm select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+}
+
+.cardapioForm input:focus,
+.cardapioForm select:focus {
+  border-color: rgb(212, 3, 3);
+}
+
+.cardapioCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.cardapioForm button {
+  grid-column: span 3;
+  padding: 12px;
+  background-color: rgb(212, 3, 3);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cardapioForm button:hover {
+  background-color: rgb(170, 0, 0);
+}
+
+.produtosSection {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.produtosSection h2 {
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.produtosEmpty {
+  color: #777;
+}
+
+.produtosTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.produtosTable th,
+.produtosTable td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.produtosTable th {
+  background-color: #f8f8f8;
+  color: #333;
+}
+
+.produtosTable tr:hover {
+  background-color: #fafafa;
+}
+
+.produtoAtivo {
+  color: green;
+  font-weight: bold;
+}
+
+.produtoInativo {
+  color: #b00020;
+  font-weight: bold;
+}
+.btnSalvar,
+.btnCancelar,
+.btnEditar,
+.btnDeletar {
+  border: none;
+  border-radius: 8px;
+  text-align: center;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btnSalvar {
+  background-color: #d40303;
+  color: #fff;
+}
+
+.btnSalvar:hover {
+  background-color: #a90000;
+}
+
+.btnCancelar {
+  background-color: #555;
+  color: #fff;
+}
+
+.btnCancelar:hover {
+  background-color: #333;
+}
+
+.btnEditar {
+  background-color: #f5b400;
+  color: #222;
+  margin-right: 8px;
+}
+
+.btnEditar:hover {
+  background-color: #d99d00;
+  color: #fff;
+}
+
+.btnDeletar {
+  background-color: #b00020;
+  color: #fff;
+}
+
+.btnDeletar:hover {
+  border: #b00020 1px solid;
+  background-color: #eee;
+  color: #d80d0d;
+  transition: 0.2s ease-out;
+}
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 520px;
+  background-color: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modalCard h2 {
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.modalForm {
+  display: grid;
+  gap: 14px;
+}
+.modalForm legend {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+}
+.modalForm input,
+.modalForm select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+}
+
+.modalForm input:focus,
+.modalForm select:focus {
+  border-color: #d40303;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+@media (max-width: 900px) {
+  .cardapioForm {
+    grid-template-columns: 1fr;
+  }
+
+  .cardapioForm button {
+    grid-column: span 1;
+  }
+
+  .produtosTable {
+    font-size: 14px;
+  }
+}
