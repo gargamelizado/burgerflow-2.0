@@ -1,0 +1,116 @@
+.cozinhaPage {
+  width: 100%;
+}
+
+.cozinhaHeader {
+  margin-bottom: 24px;
+}
+
+.cozinhaHeader h1 {
+  font-size: 32px;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.cozinhaHeader p {
+  color: #666;
+  font-size: 16px;
+}
+
+.cozinhaError {
+  background-color: #ffe5e5;
+  color: #b00020;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.cozinhaSection {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cozinhaSection h2 {
+  margin-bottom: 16px;
+  color: #222;
+}
+
+.cozinhaTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cozinhaTable th,
+.cozinhaTable td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.cozinhaTable th {
+  background-color: #f8f8f8;
+  color: #333;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.statusNovo {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+}
+
+.statusEmPreparo {
+  background-color: #fff3cd;
+  color: #946200;
+}
+
+.statusPronto {
+  background-color: #d1e7dd;
+  color: #146c43;
+}
+
+.btnCozinha {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: 0.2s ease;
+}
+
+.btnPreparo {
+  background-color: #f5b400;
+  color: #222;
+}
+
+.btnPreparo:hover {
+  background-color: #d99d00;
+}
+
+.btnPronto {
+  background-color: #198754;
+  color: #fff;
+}
+
+.btnPronto:hover {
+  background-color: #146c43;
+}
+
+.btnEntregue {
+  background-color: #555;
+  color: #fff;
+}
+
+.btnEntregue:hover {
+  background-color: #333;
+}

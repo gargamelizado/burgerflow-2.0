@@ -14,6 +14,7 @@ const MainLayout = ({ children, onLogout }) => {
           <Link to="/cardapio">Cardápio</Link>
           <Link to="/estoque">Estoque</Link>
           <Link to="/caixa">Caixa</Link>
+          <Link to="/cozinha">Cozinha</Link>
         </nav>
 
         <button onClick={onLogout}>Sair</button>
