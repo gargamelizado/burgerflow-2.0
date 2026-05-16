@@ -7,57 +7,65 @@
 }
 
 .estoqueHeader h1 {
-  font-size: 32px;
-  color: #222;
+  font-size: clamp(28px, 3vw, 38px);
+  color: var(--text-main);
   margin-bottom: 8px;
 }
 
 .estoqueHeader p {
-  color: #666;
+  color: var(--text-muted);
   font-size: 16px;
 }
 
 .estoqueError {
-  background-color: #ffe5e5;
-  color: #b00020;
+  background-color: var(--brand-soft);
+  color: var(--danger);
   padding: 12px;
-  border-radius: 8px;
+  border: 1px solid rgba(180, 35, 48, 0.14);
+  border-radius: 10px;
   margin-bottom: 20px;
 }
 
 .estoqueSection {
-  background-color: #fff;
+  overflow-x: auto;
+  background-color: var(--surface);
   padding: 24px;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 
 .estoqueTable {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 820px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .estoqueTable th,
 .estoqueTable td {
   padding: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .estoqueTable th {
-  background-color: #f8f8f8;
-  color: #333;
+  background-color: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .estoqueTable input {
   width: 100px;
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
+  background: var(--surface-soft);
 }
 
 .btnSalvarEstoque {
-  background-color: #d40303;
+  background-color: var(--brand);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -67,7 +75,7 @@
 }
 
 .btnSalvarEstoque:hover {
-  background-color: #a90000;
+  background-color: var(--brand-dark);
 }
 .btnEntradaEstoque,
 .btnSaidaEstoque {
@@ -81,21 +89,21 @@
 }
 
 .btnEntradaEstoque {
-  background-color: #198754;
+  background-color: var(--success);
   color: #fff;
 }
 
 .btnEntradaEstoque:hover {
-  background-color: #146c43;
+  background-color: #106f4b;
 }
 
 .btnSaidaEstoque {
-  background-color: #b00020;
+  background-color: var(--danger);
   color: #fff;
 }
 
 .btnSaidaEstoque:hover {
-  background-color: #870018;
+  background-color: #941b27;
 }
 .historicoSection {
   margin-top: 24px;
@@ -103,7 +111,7 @@
 
 .historicoSection h2 {
   margin-bottom: 16px;
-  color: #222;
+  color: var(--text-main);
 }
 
 .estoqueTable td:nth-child(3) {

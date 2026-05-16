@@ -7,29 +7,31 @@
 }
 
 .cardapioHeader h1 {
-  font-size: 32px;
-  color: #222;
+  font-size: clamp(28px, 3vw, 38px);
+  color: var(--text-main);
   margin-bottom: 8px;
 }
 
 .cardapioHeader p {
-  color: #666;
+  color: var(--text-muted);
   font-size: 16px;
 }
 
 .cardapioError {
-  background-color: #ffe5e5;
-  color: #b00020;
+  background-color: var(--brand-soft);
+  color: var(--danger);
   padding: 12px;
-  border-radius: 8px;
+  border: 1px solid rgba(180, 35, 48, 0.14);
+  border-radius: 10px;
   margin-bottom: 20px;
 }
 
 .cardapioForm {
-  background-color: #fff;
+  background-color: var(--surface);
   padding: 24px;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
@@ -39,15 +41,18 @@
 .cardapioForm input,
 .cardapioForm select {
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--text-main);
   font-size: 15px;
   outline: none;
 }
 
 .cardapioForm input:focus,
 .cardapioForm select:focus {
-  border-color: rgb(212, 3, 3);
+  background: var(--surface);
+  border-color: var(--brand);
 }
 
 .cardapioCheckbox {
@@ -60,7 +65,7 @@
 .cardapioForm button {
   grid-column: span 3;
   padding: 12px;
-  background-color: rgb(212, 3, 3);
+  background-color: var(--brand);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -70,53 +75,67 @@
 }
 
 .cardapioForm button:hover {
-  background-color: rgb(170, 0, 0);
+  background-color: var(--brand-dark);
 }
 
 .produtosSection {
-  background-color: #fff;
+  overflow-x: auto;
+  background-color: var(--surface);
   padding: 24px;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 
 .produtosSection h2 {
   margin-bottom: 20px;
-  color: #222;
+  color: var(--text-main);
 }
 
 .produtosEmpty {
-  color: #777;
+  color: var(--text-muted);
 }
 
 .produtosTable {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 920px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .produtosTable th,
 .produtosTable td {
   padding: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .produtosTable th {
-  background-color: #f8f8f8;
-  color: #333;
+  background-color: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .produtosTable tr:hover {
-  background-color: #fafafa;
+  background-color: var(--surface-soft);
 }
 
 .produtoAtivo {
-  color: green;
+  display: inline-flex;
+  color: var(--success);
+  background: rgba(22, 131, 90, 0.12);
+  border-radius: 999px;
+  padding: 5px 10px;
   font-weight: bold;
 }
 
 .produtoInativo {
-  color: #b00020;
+  display: inline-flex;
+  color: var(--danger);
+  background: rgba(180, 35, 48, 0.12);
+  border-radius: 999px;
+  padding: 5px 10px;
   font-weight: bold;
 }
 .btnSalvar,
@@ -133,43 +152,42 @@
 }
 
 .btnSalvar {
-  background-color: #d40303;
+  background-color: var(--brand);
   color: #fff;
 }
 
 .btnSalvar:hover {
-  background-color: #a90000;
+  background-color: var(--brand-dark);
 }
 
 .btnCancelar {
-  background-color: #555;
+  background-color: #5d646f;
   color: #fff;
 }
 
 .btnCancelar:hover {
-  background-color: #333;
+  background-color: #444b55;
 }
 
 .btnEditar {
-  background-color: #f5b400;
-  color: #222;
+  background-color: rgba(199, 138, 0, 0.14);
+  color: var(--warning);
   margin-right: 8px;
 }
 
 .btnEditar:hover {
-  background-color: #d99d00;
+  background-color: var(--warning);
   color: #fff;
 }
 
 .btnDeletar {
-  background-color: #b00020;
+  background-color: var(--danger);
   color: #fff;
 }
 
 .btnDeletar:hover {
-  border: #b00020 1px solid;
-  background-color: #eee;
-  color: #d80d0d;
+  background-color: #941b27;
+  color: #fff;
   transition: 0.2s ease-out;
 }
 .modalOverlay {
@@ -178,7 +196,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.55);
+  background-color: rgba(17, 17, 17, 0.58);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -188,15 +206,16 @@
 .modalCard {
   width: 100%;
   max-width: 520px;
-  background-color: #fff;
-  border-radius: 14px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
 }
 
 .modalCard h2 {
   margin-bottom: 20px;
-  color: #222;
+  color: var(--text-main);
 }
 
 .modalForm {
@@ -206,20 +225,22 @@
 .modalForm legend {
   font-size: 18px;
   font-weight: 600;
-  color: #222;
+  color: var(--text-main);
 }
 .modalForm input,
 .modalForm select {
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 10px;
+  background: var(--surface-soft);
   font-size: 15px;
   outline: none;
 }
 
 .modalForm input:focus,
 .modalForm select:focus {
-  border-color: #d40303;
+  background: var(--surface);
+  border-color: var(--brand);
 }
 
 .modalActions {

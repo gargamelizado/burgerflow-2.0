@@ -1,4 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+
+:root {
+  --app-bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-soft: #f9fafc;
+  --surface-strong: #fff4f2;
+  --text-main: #211f1f;
+  --text-muted: #6f747d;
+  --border: #e4e8ef;
+  --brand: #d62828;
+  --brand-dark: #ad1f1f;
+  --brand-soft: #fff0ee;
+  --success: #16835a;
+  --warning: #c78a00;
+  --danger: #b42330;
+  --info: #2364aa;
+  --radius: 14px;
+  --shadow-soft: 0 14px 34px rgba(31, 31, 31, 0.08);
+}
 
 * {
   font-family: 'Roboto', sans-serif;
@@ -7,4 +26,23 @@
   padding: 0;
 }
 
-/* teste da fucionalidade login */
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--app-bg);
+  color: var(--text-main);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(214, 40, 40, 0.24);
+  outline-offset: 2px;
+}

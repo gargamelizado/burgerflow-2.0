@@ -1,51 +1,315 @@
 .mainLayout {
+  --sidebar-open: 284px;
+  --sidebar-closed: 84px;
   min-height: 100vh;
-  display: flex;
-  background-color: #f5f5f5;
+  display: grid;
+  grid-template-columns: var(--sidebar-open) minmax(0, 1fr);
+  background:
+    linear-gradient(180deg, rgba(214, 40, 40, 0.08), transparent 330px),
+    linear-gradient(140deg, rgba(255, 184, 77, 0.09), transparent 360px),
+    var(--app-bg);
+  color: var(--text-main);
+  transition: grid-template-columns 0.24s ease;
+}
+
+.mainLayout.sidebarCollapsed {
+  grid-template-columns: var(--sidebar-closed) minmax(0, 1fr);
+}
+
+.layoutScrim {
+  display: none;
 }
 
 .sidebar {
-  width: 240px;
-  background-color: rgb(212, 3, 3);
-  color: #fff;
-  padding: 30px 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar h2 {
-  margin-bottom: 40px;
-  font-size: 26px;
-}
-
-.sidebar nav {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  flex: 1;
-}
-
-.sidebar nav a {
+  padding: 18px 14px;
+  background:
+    linear-gradient(180deg, rgba(6, 146, 211, 0.1), transparent 170px), #0b0258;
   color: #fff;
-  text-decoration: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 18px 0 38px rgba(42, 31, 29, 0.16);
+  z-index: 20;
+}
+
+.sidebarTop {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.brandBlock {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandLogo {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  object-fit: cover;
+  padding: 5px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+}
+
+.brandText,
+.sidebarLabel,
+.logoutText {
+  white-space: nowrap;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    width 0.18s ease;
+}
+
+.brandText {
+  overflow: hidden;
+}
+
+.brandText strong {
+  display: block;
   font-size: 18px;
+  line-height: 1.1;
 }
 
-.sidebar nav a:hover {
-  text-decoration: underline;
+.brandText span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.sidebar button {
-  padding: 10px;
-  background-color: #fff;
-  color: rgb(212, 3, 3);
-  border: none;
-  border-radius: 10px;
+.sidebarToggle,
+.mobileMenuButton {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
   cursor: pointer;
-  font-weight: bold;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.sidebarToggle:hover,
+.mobileMenuButton:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.sidebarToggle:active,
+.mobileMenuButton:active {
+  transform: scale(0.96);
+}
+
+.sidebarToggle img,
+.mobileMenuButton img {
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.sidebarNav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebarLink,
+.logoutButton {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 0;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  background: transparent;
+  text-decoration: none;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.sidebarLink:hover,
+.logoutButton:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(2px);
+}
+
+.sidebarLink.active {
+  color: #2c1814;
+  background: #fff;
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.2);
+}
+
+.sidebarIcon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+}
+
+.sidebarIcon img {
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.sidebarLink.active .sidebarIcon {
+  background: linear-gradient(135deg, var(--brand), #3de2ff);
+}
+
+.sidebarLink.active .sidebarIcon img {
+  filter: brightness(0) invert(1);
+}
+
+.logoutButton {
+  width: 100%;
+  margin-top: auto;
+}
+
+.logoutButton .sidebarIcon {
+  background: rgba(8, 82, 194, 0.18);
+}
+
+.mainLayout.sidebarCollapsed .sidebar {
+  padding-inline: 12px;
+}
+
+.mainLayout.sidebarCollapsed .sidebarTop {
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.mainLayout.sidebarCollapsed .brandBlock {
+  justify-content: center;
+}
+
+.mainLayout.sidebarCollapsed .brandText,
+.mainLayout.sidebarCollapsed .sidebarLabel,
+.mainLayout.sidebarCollapsed .logoutText {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-8px);
+}
+
+.mainLayout.sidebarCollapsed .sidebarLink,
+.mainLayout.sidebarCollapsed .logoutButton {
+  justify-content: center;
+}
+
+.mainLayout.sidebarCollapsed .sidebarToggle {
+  margin-top: 8px;
 }
 
 .mainContent {
-  flex: 1;
-  padding: 40px;
+  min-width: 0;
+  padding: 30px;
+}
+
+.contentShell {
+  width: min(100%, 1340px);
+  margin: 0 auto;
+}
+
+.mobileTopbar {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mainLayout,
+  .mainLayout.sidebarCollapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    width: 284px;
+    transform: translateX(0);
+    transition: transform 0.22s ease;
+  }
+
+  .mainLayout.sidebarCollapsed .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .mainLayout:not(.sidebarCollapsed) .layoutScrim {
+    position: fixed;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgba(18, 16, 16, 0.48);
+    z-index: 15;
+  }
+
+  .mainContent {
+    padding: 16px;
+  }
+
+  .mobileTopbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: -16px -16px 20px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+  }
+
+  .mobileTopbar strong {
+    color: var(--text-main);
+  }
+
+  .mobileMenuButton {
+    color: var(--text-main);
+    background: #0b0258;
+    border-color: var(--border);
+    box-shadow: 0 10px 22px rgba(31, 31, 31, 0.08);
+  }
+
+  .mobileMenuButton img {
+    filter: none;
+  }
 }

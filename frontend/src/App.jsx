@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 
@@ -29,7 +29,6 @@ const App = () => {
     setIsLoggedIn(false);
   };
 
-  
   const protectedPage = (component) => {
     return isLoggedIn ? (
       <MainLayout onLogout={handleLogout}>{component}</MainLayout>
@@ -37,9 +36,6 @@ const App = () => {
       <Navigate to="/login" />
     );
   };
-
-
-
 
   return (
     <BrowserRouter>
@@ -59,7 +55,8 @@ const App = () => {
         <Route path="/pedidos" element={protectedPage(<Pedidos />)} />
         <Route path="/cardapio" element={protectedPage(<Cardapio />)} />
         <Route path="/estoque" element={protectedPage(<Estoque />)} />
-          <Route path="/cozinha" element={protectedPage(<Cozinha />)} />
+        <Route path="/caixa" element={protectedPage(<Caixa />)} />
+        <Route path="/cozinha" element={protectedPage(<Cozinha />)} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>

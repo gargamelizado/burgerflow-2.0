@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import './Login.css';
 import Logo from '../../imgs/Burger Flow.png';
@@ -46,7 +46,7 @@ export default function Login({ onLogin }) {
       setError('');
       onLogin();
       navigate('/dashboard');
-    } catch (error) {
+    } catch {
       setError('Erro ao conectar com o servidor');
     }
   };

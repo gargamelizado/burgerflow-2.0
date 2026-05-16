@@ -4,29 +4,36 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  border-radius: 10px;
-  background-color: #f5f5f5;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(214, 40, 40, 0.06), transparent 300px),
+    var(--app-bg);
 }
-img {
+
+.wrapperLoginPage .logo {
   width: 150px;
   margin-bottom: 10px;
-  border-radius: 10px;
+  border-radius: 16px;
+  box-shadow: 0 18px 34px rgba(33, 24, 23, 0.14);
 }
-h1 {
+
+.wrapperLoginPage h1 {
   font-size: 38px;
-  font-style: italic;
-  font-weight: 600;
+  font-weight: 900;
   margin: 20px 0;
+  color: var(--text-main);
 }
+
 .wrapperLoginPage {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #fff;
+  background-color: var(--surface);
   padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 
 .loginform {
@@ -37,30 +44,34 @@ h1 {
 
 .loginform input {
   margin-bottom: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
 }
 .loginform input:focus {
-  border-color: rgb(212, 3, 3);
+  border-color: var(--brand);
+  background: var(--surface);
   outline: none;
 }
 
 .loginform button {
-  padding: 10px;
-  background-color: rgb(212, 3, 3);
+  padding: 12px;
+  background-color: var(--brand);
   color: #fff;
   border-radius: 12px;
-  border: 1px solid #ccc;
+  border: 0;
+  font-weight: 700;
   cursor: pointer;
+  transition: 0.2s ease;
 }
 .loginform button:hover {
-  background-color: #f30909;
+  background-color: var(--brand-dark);
   color: #fff;
 }
 
 .messagemError {
-  color: rgb(212, 3, 3);
+  color: var(--danger);
   font-size: 14px;
   margin-bottom: 15px;
   text-align: center;

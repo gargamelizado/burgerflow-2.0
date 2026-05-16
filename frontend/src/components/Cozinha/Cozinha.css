@@ -7,51 +7,58 @@
 }
 
 .cozinhaHeader h1 {
-  font-size: 32px;
-  color: #222;
+  font-size: clamp(28px, 3vw, 38px);
+  color: var(--text-main);
   margin-bottom: 8px;
 }
 
 .cozinhaHeader p {
-  color: #666;
+  color: var(--text-muted);
   font-size: 16px;
 }
 
 .cozinhaError {
-  background-color: #ffe5e5;
-  color: #b00020;
+  background-color: var(--brand-soft);
+  color: var(--danger);
   padding: 12px;
-  border-radius: 8px;
+  border: 1px solid rgba(180, 35, 48, 0.14);
+  border-radius: 10px;
   margin-bottom: 20px;
 }
 
 .cozinhaSection {
-  background-color: #fff;
+  overflow-x: auto;
+  background-color: var(--surface);
   padding: 24px;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 
 .cozinhaSection h2 {
   margin-bottom: 16px;
-  color: #222;
+  color: var(--text-main);
 }
 
 .cozinhaTable {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .cozinhaTable th,
 .cozinhaTable td {
   padding: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .cozinhaTable th {
-  background-color: #f8f8f8;
-  color: #333;
+  background-color: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .statusBadge {
@@ -64,18 +71,18 @@
 }
 
 .statusNovo {
-  background-color: #e7f1ff;
-  color: #0d6efd;
+  background-color: rgba(35, 100, 170, 0.12);
+  color: var(--info);
 }
 
 .statusEmPreparo {
-  background-color: #fff3cd;
-  color: #946200;
+  background-color: rgba(199, 138, 0, 0.14);
+  color: var(--warning);
 }
 
 .statusPronto {
-  background-color: #d1e7dd;
-  color: #146c43;
+  background-color: rgba(22, 131, 90, 0.12);
+  color: var(--success);
 }
 
 .btnCozinha {
@@ -89,28 +96,29 @@
 }
 
 .btnPreparo {
-  background-color: #f5b400;
-  color: #222;
+  background-color: rgba(199, 138, 0, 0.14);
+  color: var(--warning);
 }
 
 .btnPreparo:hover {
-  background-color: #d99d00;
+  background-color: var(--warning);
+  color: #fff;
 }
 
 .btnPronto {
-  background-color: #198754;
+  background-color: var(--success);
   color: #fff;
 }
 
 .btnPronto:hover {
-  background-color: #146c43;
+  background-color: #106f4b;
 }
 
 .btnEntregue {
-  background-color: #555;
+  background-color: #5d646f;
   color: #fff;
 }
 
 .btnEntregue:hover {
-  background-color: #333;
+  background-color: #444b55;
 }

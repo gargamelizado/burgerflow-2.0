@@ -57,5 +57,3 @@ export const atualizarStatusPedido = async (id, status) => {
 
   return tratarResposta(response);
 };
-
-

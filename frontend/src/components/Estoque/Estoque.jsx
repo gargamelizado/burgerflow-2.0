@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   listarEstoque,
   movimentarEstoque,
@@ -30,8 +30,36 @@ const Estoque = () => {
     }
   };
   useEffect(() => {
-    carregarEstoque();
-    carregarHistorico();
+    let ignorarResposta = false;
+
+    listarEstoque()
+      .then((data) => {
+        if (!ignorarResposta) {
+          setProdutos(data);
+          setErro('');
+        }
+      })
+      .catch((error) => {
+        if (!ignorarResposta) {
+          setErro(error.message);
+        }
+      });
+
+    listarHistoricoEstoque()
+      .then((data) => {
+        if (!ignorarResposta) {
+          setHistorico(data);
+        }
+      })
+      .catch((error) => {
+        if (!ignorarResposta) {
+          setErro(error.message);
+        }
+      });
+
+    return () => {
+      ignorarResposta = true;
+    };
   }, []);
 
   const handleMovimentoChange = (id, valor) => {

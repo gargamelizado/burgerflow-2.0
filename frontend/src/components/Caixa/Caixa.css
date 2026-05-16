@@ -7,69 +7,75 @@
 }
 
 .caixaHeader h1 {
-  font-size: 32px;
-  color: #222;
+  font-size: clamp(28px, 3vw, 38px);
+  color: var(--text-main);
   margin-bottom: 8px;
 }
 
 .caixaHeader p {
-  color: #666;
+  color: var(--text-muted);
   font-size: 16px;
 }
 
 .caixaError {
-  background-color: #ffe5e5;
-  color: #b00020;
+  background-color: var(--brand-soft);
+  color: var(--danger);
   padding: 12px;
-  border-radius: 8px;
+  border: 1px solid rgba(180, 35, 48, 0.14);
+  border-radius: 10px;
   margin-bottom: 20px;
 }
 
 .caixaSection {
-  background-color: #fff;
+  overflow-x: auto;
+  background-color: var(--surface);
   padding: 24px;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
   margin-bottom: 24px;
 }
 
 .caixaSection h2 {
   margin-bottom: 16px;
-  color: #222;
+  color: var(--text-main);
 }
 
 .caixaStatusAberto {
-  color: #198754;
+  color: var(--success);
   font-weight: bold;
 }
 
 .caixaStatusFechado {
-  color: #b00020;
+  color: var(--danger);
   font-weight: bold;
 }
 
 .caixaInfo p {
   margin-bottom: 8px;
-  color: #333;
+  color: var(--text-main);
 }
 
 .caixaForm {
   display: grid;
   grid-template-columns: 1fr 2fr auto;
+  grid-auto-flow: column;
   gap: 12px;
   align-items: center;
 }
 
 .caixaForm input {
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 10px;
+  background: var(--surface-soft);
   font-size: 15px;
   outline: none;
 }
 
 .caixaForm input:focus {
-  border-color: #d40303;
+  background: var(--surface);
+  border-color: var(--brand);
 }
 
 .btnAbrirCaixa,
@@ -83,49 +89,55 @@
 }
 
 .btnAbrirCaixa {
-  background-color: #198754;
+  background-color: var(--success);
   color: #fff;
 }
 
 .btnAbrirCaixa:hover {
-  background-color: #146c43;
+  background-color: #106f4b;
 }
 
 .btnFecharCaixa {
-  background-color: #b00020;
+  background-color: var(--danger);
   color: #fff;
 }
 
 .btnFecharCaixa:hover {
-  background-color: #870018;
+  background-color: #941b27;
 }
 .caixaForm select {
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 10px;
+  background: var(--surface-soft);
   font-size: 15px;
   outline: none;
 }
 
 .caixaForm select:focus {
-  border-color: #d40303;
+  background: var(--surface);
+  border-color: var(--brand);
 }
 
 .caixaTable {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 720px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .caixaTable th,
 .caixaTable td {
   padding: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .caixaTable th {
-  background-color: #f8f8f8;
-  color: #333;
+  background-color: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .caixaTable td:nth-child(2) {
@@ -139,26 +151,26 @@
 }
 
 .caixaResumoCard {
-  background-color: #f8f8f8;
+  background-color: var(--surface-soft);
   padding: 16px;
   border-radius: 12px;
-  border: 1px solid #eee;
+  border: 1px solid var(--border);
 }
 
 .caixaResumoCard span {
   display: block;
-  color: #666;
+  color: var(--text-muted);
   font-size: 14px;
   margin-bottom: 8px;
 }
 
 .caixaResumoCard strong {
-  color: #222;
+  color: var(--text-main);
   font-size: 20px;
 }
 .caixaDiferenca {
-  background-color: #f8f8f8;
-  border: 1px solid #eee;
+  background-color: var(--surface-soft);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
   grid-column: 1 / -1;
@@ -169,17 +181,17 @@
 }
 
 .diferencaZero {
-  color: #198754;
+  color: var(--success);
   font-weight: bold;
 }
 
 .diferencaPositiva {
-  color: #0d6efd;
+  color: var(--info);
   font-weight: bold;
 }
 
 .diferencaNegativa {
-  color: #b00020;
+  color: var(--danger);
   font-weight: bold;
 }
 @media (max-width: 900px) {

@@ -44,6 +44,3 @@ export const atualizarStatusPedidoCozinha = async (id, status) => {
 
   return tratarResposta(response);
 };
-
-
-

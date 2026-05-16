@@ -7,35 +7,38 @@
 }
 
 .pedidosHeader h1 {
-  font-size: 32px;
-  color: #222;
+  font-size: clamp(28px, 3vw, 38px);
+  color: var(--text-main);
   margin-bottom: 8px;
 }
 
 .pedidosHeader p {
-  color: #666;
+  color: var(--text-muted);
   font-size: 16px;
 }
 
 .pedidosError {
-  background-color: #ffe5e5;
-  color: #b00020;
+  background-color: var(--brand-soft);
+  color: var(--danger);
   padding: 12px;
-  border-radius: 8px;
+  border: 1px solid rgba(180, 35, 48, 0.14);
+  border-radius: 10px;
   margin-bottom: 20px;
 }
 
 .pedidosSection {
-  background-color: #fff;
+  overflow-x: auto;
+  background-color: var(--surface);
   padding: 24px;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
   margin-bottom: 24px;
 }
 
 .pedidosSection h2 {
   margin-bottom: 16px;
-  color: #222;
+  color: var(--text-main);
 }
 
 .pedidosForm {
@@ -49,8 +52,9 @@
 .pedidosForm select,
 .statusSelect {
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 10px;
+  background: var(--surface-soft);
   font-size: 15px;
   outline: none;
 }
@@ -58,11 +62,12 @@
 .pedidosForm input:focus,
 .pedidosForm select:focus,
 .statusSelect:focus {
-  border-color: #d40303;
+  background: var(--surface);
+  border-color: var(--brand);
 }
 
 .btnCriarPedido {
-  background-color: #d40303;
+  background-color: var(--brand);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -73,24 +78,28 @@
 }
 
 .btnCriarPedido:hover {
-  background-color: #a90000;
+  background-color: var(--brand-dark);
 }
 
 .pedidosTable {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .pedidosTable th,
 .pedidosTable td {
   padding: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .pedidosTable th {
-  background-color: #f8f8f8;
-  color: #333;
+  background-color: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .statusBadge {
@@ -100,33 +109,33 @@
   font-size: 13px;
   font-weight: 700;
   text-transform: capitalize;
-  background-color: #f1f1f1;
-  color: #333;
+  background-color: var(--surface-soft);
+  color: var(--text-main);
 }
 
 .statusNovo {
-  background-color: #e7f1ff;
-  color: #0d6efd;
+  background-color: rgba(35, 100, 170, 0.12);
+  color: var(--info);
 }
 
 .statusEmPreparo {
-  background-color: #fff3cd;
-  color: #946200;
+  background-color: rgba(199, 138, 0, 0.14);
+  color: var(--warning);
 }
 
 .statusPronto {
-  background-color: #d1e7dd;
-  color: #146c43;
+  background-color: rgba(22, 131, 90, 0.12);
+  color: var(--success);
 }
 
 .statusEntregue {
-  background-color: #e2e3e5;
-  color: #41464b;
+  background-color: #eceff4;
+  color: #454b55;
 }
 
 .statusCancelado {
-  background-color: #f8d7da;
-  color: #842029;
+  background-color: rgba(180, 35, 48, 0.12);
+  color: var(--danger);
 }
 
 @media (max-width: 1100px) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   listarProdutos,
   cadastrarProduto,
@@ -33,7 +33,24 @@ const Cardapio = () => {
   };
 
   useEffect(() => {
-    carregarProdutos();
+    let ignorarResposta = false;
+
+    listarProdutos()
+      .then((data) => {
+        if (!ignorarResposta) {
+          setProdutos(data);
+          setErro('');
+        }
+      })
+      .catch((error) => {
+        if (!ignorarResposta) {
+          setErro(error.message);
+        }
+      });
+
+    return () => {
+      ignorarResposta = true;
+    };
   }, []);
 
   const handleChange = (event) => {
