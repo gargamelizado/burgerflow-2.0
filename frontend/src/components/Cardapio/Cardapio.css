@@ -3,93 +3,264 @@
 }
 
 .cardapioHeader {
-  margin-bottom: 24px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
 }
 
 .cardapioHeader h1 {
-  font-size: clamp(28px, 3vw, 38px);
   color: var(--text-main);
-  margin-bottom: 8px;
+  font-size: 32px;
+  line-height: 1.15;
 }
 
 .cardapioHeader p {
   color: var(--text-muted);
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.cardapioMode {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(214, 40, 40, 0.1);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cardapioStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(78px, 1fr));
+  gap: 8px;
+}
+
+.cardapioStats span {
+  display: grid;
+  gap: 2px;
+  min-width: 78px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cardapioStats strong {
+  color: var(--text-main);
+  font-size: 20px;
+  line-height: 1;
 }
 
 .cardapioError {
-  background-color: var(--brand-soft);
+  background-color: #fff7f7;
   color: var(--danger);
-  padding: 12px;
-  border: 1px solid rgba(180, 35, 48, 0.14);
-  border-radius: 10px;
-  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid rgba(180, 35, 48, 0.18);
+  border-left: 4px solid var(--danger);
+  border-radius: 8px;
+  margin-bottom: 18px;
 }
 
 .cardapioForm {
   background-color: var(--surface);
-  padding: 24px;
+  padding: 22px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(32, 36, 44, 0.07);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .cardapioForm input,
 .cardapioForm select {
-  padding: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 12px;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-soft);
+  border-radius: 8px;
+  background: var(--surface);
   color: var(--text-main);
   font-size: 15px;
   outline: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.cardapioForm input::placeholder {
+  color: #9aa1ac;
 }
 
 .cardapioForm input:focus,
 .cardapioForm select:focus {
-  background: var(--surface);
+  background: #fff;
   border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(214, 40, 40, 0.12);
+}
+
+.cardapioField {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.cardapioField span {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .cardapioCheckbox {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-weight: 500;
+  min-height: 44px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.cardapioCheckbox input {
+  width: auto;
+  min-height: auto;
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+  min-height: 44px;
 }
 
 .cardapioForm button {
-  grid-column: span 3;
-  padding: 12px;
-  background-color: var(--brand);
-  color: #fff;
   border: none;
-  border-radius: 10px;
-  font-weight: bold;
+  border-radius: 8px;
+  font-weight: 700;
   cursor: pointer;
-  transition: 0.2s;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .cardapioForm button:hover {
-  background-color: var(--brand-dark);
+  transform: translateY(-1px);
+}
+
+.cadastroItemForm .formBlock {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+  background: var(--surface-soft);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.cadastroItemForm .formBlockMain {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  align-items: end;
+}
+
+.cadastroItemForm .formBlock legend {
+  padding: 0 8px;
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.cadastroItemForm .fullWidth {
+  grid-template-columns: 1fr;
+}
+
+.compositionRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) minmax(140px, 1fr) 120px auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.cadastroItemForm .btnAdicionarLinha,
+.cadastroItemForm .btnRemoverLinha,
+.cadastroItemForm .formActions button {
+  min-height: 40px;
+  padding: 10px 12px;
+}
+
+.cadastroItemForm .btnAdicionarLinha {
+  justify-self: start;
+  background: rgba(22, 131, 90, 0.12);
+  color: var(--success);
+}
+
+.cadastroItemForm .btnAdicionarLinha:hover {
+  background: rgba(22, 131, 90, 0.2);
+  box-shadow: 0 8px 16px rgba(22, 131, 90, 0.1);
+}
+
+.cadastroItemForm .btnRemoverLinha {
+  background: rgba(180, 35, 48, 0.12);
+  color: var(--danger);
+}
+
+.cadastroItemForm .btnRemoverLinha:hover {
+  background: rgba(180, 35, 48, 0.2);
+  box-shadow: 0 8px 16px rgba(180, 35, 48, 0.1);
+}
+
+.cadastroItemForm .formActions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 4px;
 }
 
 .produtosSection {
   overflow-x: auto;
   background-color: var(--surface);
-  padding: 24px;
+  padding: 22px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(32, 36, 44, 0.07);
 }
 
-.produtosSection h2 {
-  margin-bottom: 20px;
+.produtosSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.produtosSectionHeader h2 {
   color: var(--text-main);
+  font-size: 22px;
+}
+
+.produtosSectionHeader p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 2px;
 }
 
 .produtosEmpty {
@@ -108,36 +279,108 @@
   padding: 12px;
   border-bottom: 1px solid var(--border);
   text-align: left;
+  vertical-align: middle;
 }
 
 .produtosTable th {
-  background-color: var(--surface-soft);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f3f5f8;
   color: var(--text-muted);
   font-size: 12px;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
-.produtosTable tr:hover {
-  background-color: var(--surface-soft);
+.produtosTable tr {
+  transition: background-color 0.16s ease;
+}
+
+.produtosTable tbody tr:hover {
+  background-color: #fafbfc;
+}
+
+.produtosTable td:last-child {
+  white-space: nowrap;
+}
+
+.itemName {
+  color: var(--text-main);
+  font-weight: 800;
+}
+
+.tipoBadge,
+.categoriaBadge,
+.cardapioBadge,
+.produtoAtivo,
+.produtoInativo {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tipoBadge {
+  background: rgba(35, 100, 170, 0.11);
+  color: var(--info);
+}
+
+.tipoBadge-ingrediente {
+  background: rgba(111, 116, 125, 0.12);
+  color: #4d535c;
+}
+
+.tipoBadge-produto {
+  background: rgba(214, 40, 40, 0.1);
+  color: var(--brand);
+}
+
+.tipoBadge-combo {
+  background: rgba(199, 138, 0, 0.14);
+  color: #8a6100;
+}
+
+.tipoBadge-promocao {
+  background: rgba(22, 131, 90, 0.12);
+  color: var(--success);
+}
+
+.categoriaBadge {
+  background: #f1f3f6;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.cardapioBadge-on {
+  background: rgba(22, 131, 90, 0.12);
+  color: var(--success);
+}
+
+.cardapioBadge-off {
+  background: #eef0f3;
+  color: var(--text-muted);
 }
 
 .produtoAtivo {
-  display: inline-flex;
   color: var(--success);
   background: rgba(22, 131, 90, 0.12);
-  border-radius: 999px;
-  padding: 5px 10px;
-  font-weight: bold;
 }
 
 .produtoInativo {
-  display: inline-flex;
   color: var(--danger);
   background: rgba(180, 35, 48, 0.12);
-  border-radius: 999px;
-  padding: 5px 10px;
-  font-weight: bold;
 }
+
+.tableActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .btnSalvar,
 .btnCancelar,
 .btnEditar,
@@ -146,14 +389,19 @@
   border-radius: 8px;
   text-align: center;
   padding: 8px 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .btnSalvar {
   background-color: var(--brand);
   color: #fff;
+  box-shadow: 0 8px 16px rgba(214, 40, 40, 0.16);
 }
 
 .btnSalvar:hover {
@@ -161,100 +409,70 @@
 }
 
 .btnCancelar {
-  background-color: #5d646f;
-  color: #fff;
+  background-color: #eef0f3;
+  color: var(--text-main);
 }
 
 .btnCancelar:hover {
-  background-color: #444b55;
+  background-color: #dde1e7;
 }
 
 .btnEditar {
-  background-color: rgba(199, 138, 0, 0.14);
-  color: var(--warning);
-  margin-right: 8px;
+  background-color: rgba(35, 100, 170, 0.12);
+  color: var(--info);
 }
 
 .btnEditar:hover {
-  background-color: var(--warning);
+  background-color: var(--info);
   color: #fff;
 }
 
 .btnDeletar {
+  background-color: rgba(180, 35, 48, 0.12);
+  color: var(--danger);
+}
+
+.btnDeletar:hover {
   background-color: var(--danger);
   color: #fff;
 }
 
-.btnDeletar:hover {
-  background-color: #941b27;
-  color: #fff;
-  transition: 0.2s ease-out;
-}
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(17, 17, 17, 0.58);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-.modalCard {
-  width: 100%;
-  max-width: 520px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
-}
-
-.modalCard h2 {
-  margin-bottom: 20px;
-  color: var(--text-main);
-}
-
-.modalForm {
-  display: grid;
-  gap: 14px;
-}
-.modalForm legend {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-main);
-}
-.modalForm input,
-.modalForm select {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-soft);
-  font-size: 15px;
-  outline: none;
-}
-
-.modalForm input:focus,
-.modalForm select:focus {
-  background: var(--surface);
-  border-color: var(--brand);
-}
-
-.modalActions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
 @media (max-width: 900px) {
-  .cardapioForm {
+  .cardapioHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cardapioHeader h1 {
+    font-size: 26px;
+  }
+
+  .cardapioStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cardapioForm,
+  .produtosSection {
+    padding: 16px;
+  }
+
+  .cadastroItemForm .formBlock,
+  .cadastroItemForm .formBlockMain,
+  .compositionRow {
     grid-template-columns: 1fr;
   }
 
-  .cardapioForm button {
-    grid-column: span 1;
+  .checkboxGroup {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cadastroItemForm .formActions {
+    justify-content: stretch;
+  }
+
+  .cadastroItemForm .formActions button {
+    flex: 1 1 160px;
   }
 
   .produtosTable {

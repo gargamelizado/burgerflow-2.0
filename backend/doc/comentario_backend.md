@@ -1,112 +1,136 @@
 # Comentario do backend - BurgerFlow 2.0
 
-Atualizado em: 2026-05-15.
+Atualizado em: 2026-05-19.
 
 Este backend e uma API Express em CommonJS, com MySQL via `mysql2/promise`,
-autenticacao JWT e senha com bcrypt. A estrutura principal segue o padrao
+autenticacao JWT e senha com bcrypt. O padrao principal continua sendo:
+
 Route -> Controller -> Service -> Repository -> MySQL.
+
+Nesta fase o escopo ativo e basico: cardapio, estoque, pedidos e caixa.
 
 ## Entrada da aplicacao
 
-- `src/server.js`: carrega `.env`, importa `app` e escuta na porta
+- `src/server.js`: carrega `.env`, importa `app` e escuta em
   `process.env.PORT || 3006`.
-- `src/app.js`: configura `cors`, `express.json`, rota de health check,
-  modulos da API, 404 e middleware de erro.
-- `src/config/env.js`: define valores padrao de porta, banco e JWT.
+- `src/app.js`: configura `cors`, `express.json`, health check, rotas da API,
+  404 e middleware de erro.
+- `src/config/env.js`: define porta, banco e segredo JWT.
 - `src/config/db.js`: cria pool MySQL.
-- `src/middlewares/auth.middleware.js`: valida header
-  `Authorization: Bearer <token>` e grava o payload em `req.user`.
-- `src/middlewares/error.middleware.js`: devolve JSON com `message`.
+- `src/middlewares/auth.middleware.js`: valida `Authorization: Bearer <token>`.
+- `src/middlewares/error.middleware.js`: devolve erro em JSON.
 
-## Modulos montados
+## Tipos de item
+
+Os unicos tipos aceitos nesta fase sao:
+
+- `INGREDIENTE`
+- `PRODUTO`
+- `COMBO`
+- `PROMOCAO`
+
+Nao existe fluxo ativo de `PRODUTO_SIMPLES` ou `PRODUTO_COMPOSTO`.
+Produto simples e apenas um `PRODUTO` com um ingrediente.
+
+## Regras principais
+
+- Ingrediente controla estoque e nao aparece no cardapio.
+- Produto aparece no cardapio e baixa ingredientes.
+- Combo aparece no cardapio, contem produtos e baixa os ingredientes desses
+  produtos.
+- Promocao aparece no cardapio, aponta para um produto ou combo e baixa estoque
+  como o item original.
+- A categoria `todos` existe apenas como filtro do frontend. Ela nao deve ser
+  salva no banco.
+- Estoque e controlado por `quantidade_total_base` e `unidade_base`.
+- Conversoes aceitas: `kg -> gr`, `gr -> gr`, `li -> ml`, `ml -> ml`.
+- O pedido nao bloqueia venda por falta de estoque. Se o estoque ficar negativo,
+  o backend retorna aviso em `avisos_estoque` e conclui a venda.
+
+## Funcoes de regra
+
+Arquivo: `src/utils/itemRules.js`
+
+- `converterParaBase(quantidade, unidade)`
+- `calcularEstoqueBase(dadosIngrediente)`
+- validadores de tipo, categoria e unidades
+
+Arquivo: `src/modules/orders/orderStock.service.js`
+
+- `resolverIngredientesDoItem(itemId, quantidadeVendida)`
+- `verificarEstoqueNegativo(ingredientesNecessarios)`
+- `baixarEstoque(ingredientesNecessarios)`
+- `mergeIngredientes(ingredientes)`
+
+## Rotas montadas
 
 ### Auth
-
-Arquivos:
-
-- `src/modules/auth/auth.routes.js`
-- `src/modules/auth/auth.controller.js`
-- `src/modules/auth/auth.service.js`
-- `src/modules/auth/auth.repository.js`
-
-Rotas:
 
 - `POST /api/auth/login`
 - `GET /api/auth/verify`
 
-Comportamento:
+### Itens
 
-- Login aceita `email` e `senha` ou `password`.
-- Busca usuario por email na tabela `usuarios`.
-- Bloqueia usuario inativo.
-- Compara senha com bcrypt.
-- Gera JWT com `id`, `email` e `nivel_acesso`.
+Base generica:
 
-### Produtos
+- `GET /api/itens`
+- `GET /api/itens/:id`
+- `POST /api/itens`
+- `PUT /api/itens/:id`
+- `DELETE /api/itens/:id`
+- `GET /api/itens/cardapio`
 
-Arquivos ativos:
-
-- `src/modules/products/product.routes.js`
-- `src/modules/products/product.controller.js`
-- `src/modules/products/product.service.js`
-- `src/modules/products/product.repository.js`
-
-Rotas:
+Rotas por tipo, usando a mesma regra de itens:
 
 - `GET /api/produtos`
 - `POST /api/produtos`
+- `GET /api/produtos/:id`
 - `PUT /api/produtos/:id`
 - `DELETE /api/produtos/:id`
+- `GET /api/ingredientes`
+- `POST /api/ingredientes`
+- `GET /api/ingredientes/:id`
+- `PUT /api/ingredientes/:id`
+- `DELETE /api/ingredientes/:id`
+- `GET /api/combos`
+- `POST /api/combos`
+- `GET /api/combos/:id`
+- `PUT /api/combos/:id`
+- `DELETE /api/combos/:id`
+- `GET /api/promocoes`
+- `POST /api/promocoes`
+- `GET /api/promocoes/:id`
+- `PUT /api/promocoes/:id`
+- `DELETE /api/promocoes/:id`
 
-Comportamento:
+`DELETE` desativa o item em vez de remover fisicamente.
 
-- Todas as rotas exigem token.
-- Lista produtos ordenando por `id DESC`.
-- Cria e edita `nome`, `categoria`, `tipo`, `preco`, `custo`,
-  `quantidade_estoque`, `unidade` e `ativo`.
-- Remove produto com `DELETE FROM produtos WHERE id = ?`.
+### Cardapio
 
-Observacao:
+- `GET /api/cardapio`
 
-- Existe tambem `src/routes/product.routes.js`, mas ele nao esta montado no
-  `app.js`. Ele mistura uma rota simples antiga com conteudo duplicado; se for
-  reaproveitado, deve ser limpo antes.
+Regras:
+
+- lista apenas itens ativos
+- lista apenas `aparece_cardapio = true`
+- nao lista ingrediente
+- aceita filtros `categoria` e `tipo`
+- `categoria=todos` retorna todos os itens ativos do cardapio
 
 ### Estoque
 
-Arquivos:
-
-- `src/modules/inventory/inventory.routes.js`
-- `src/modules/inventory/inventory.controller.js`
-- `src/modules/inventory/inventory.service.js`
-- `src/modules/inventory/inventory.repository.js`
-
-Rotas:
-
+- `GET /api/estoque`
 - `POST /api/estoque/movimentar`
 - `GET /api/estoque/historico`
 
-Comportamento:
+Regras:
 
-- Valida `produto_id`, `tipo` e `quantidade`.
-- `tipo` aceito: `entrada` ou `saida`.
-- Atualiza `produtos.quantidade_estoque`.
-- Grava historico em `movimentacoes_estoque`.
-
-Pendente:
-
-- A tabela `movimentacoes_estoque` nao existe em `databases/schema.sql`.
+- movimenta apenas ingredientes
+- aceita `entrada`, `saida` e `ajuste`
+- permite saldo negativo
+- registra historico em `movimentacoes_estoque`
 
 ### Caixa
-
-Arquivos:
-
-- `src/modules/cash/cash.routes.js`
-- `src/modules/cash/cash.controller.js`
-- `src/modules/cash/cash.service.js`
-- `src/modules/cash/cash.repository.js`
-
-Rotas:
 
 - `GET /api/caixa/aberto`
 - `POST /api/caixa/abrir`
@@ -114,101 +138,90 @@ Rotas:
 - `POST /api/caixa/movimento`
 - `GET /api/caixa/movimentos`
 
-Comportamento:
+Regras:
 
-- So permite um caixa aberto.
-- Abertura valida valor inicial nao negativo.
-- Movimentos aceitos: `suprimento` e `sangria`.
-- Fechamento calcula valor esperado e diferenca.
-
-Pendente:
-
-- As tabelas `caixas` e `caixa_movimentos` nao existem em
-  `databases/schema.sql`.
+- so permite um caixa aberto.
+- movimento manual aceita `suprimento` e `sangria`.
+- venda de PDV e registrada pelo fluxo de pedido como movimento `venda`.
+- fechamento calcula valor esperado e diferenca.
 
 ### Pedidos
-
-Arquivos:
-
-- `src/modules/orders/order.routes.js`
-- `src/modules/orders/order.controller.js`
-- `src/modules/orders/order.service.js`
-- `src/modules/orders/order.repository.js`
-
-Rotas:
 
 - `GET /api/pedidos`
 - `POST /api/pedidos`
 - `PATCH /api/pedidos/:id/status`
 
-Comportamento:
+Ao criar pedido:
 
-- Gera o proximo numero com `MAX(numero) + 1`.
-- Cria pedido com status inicial `novo`.
-- Status aceitos: `novo`, `em_preparo`, `pronto`, `entregue`, `cancelado`.
-
-Pendente:
-
-- A tabela `pedidos` nao existe em `databases/schema.sql`.
-- Ainda nao existem itens do pedido, pagamentos ou baixa automatica de estoque.
+- recebe itens vendidos
+- rejeita ingrediente como item vendido
+- resolve ingredientes de produto, combo ou promocao
+- calcula avisos de estoque negativo
+- cria pedido e itens
+- baixa estoque mesmo que fique negativo
+- registra movimentacao de estoque
+- registra movimento de caixa do tipo `venda`
+- retorna `avisos_estoque` quando algum ingrediente ficar negativo
 
 ### Cozinha
-
-Arquivos:
-
-- `src/modules/kitchen/kitchen.routes.js`
-- `src/modules/kitchen/kitchen.controller.js`
-- `src/modules/kitchen/kitchen.service.js`
-- `src/modules/kitchen/kitchen.repository.js`
-
-Rotas:
 
 - `GET /api/cozinha/pedidos`
 - `PATCH /api/cozinha/pedidos/:id/status`
 
-Comportamento:
+Lista pedidos que nao estao `entregue` nem `cancelado`.
 
-- Lista pedidos que nao estao `entregue` nem `cancelado`.
-- Permite status `novo`, `em_preparo`, `pronto` e `entregue`.
+## Banco de dados
 
-Pendente:
-
-- Depende da tabela `pedidos`, que ainda nao esta no schema atual.
-
-## Banco de dados atual
-
-`databases/schema.sql` cria:
+`databases/schema.sql` cria as tabelas principais:
 
 - `usuarios`
-- `produtos`
+- `itens`
+- `estoque_ingredientes`
+- `produto_ingredientes`
+- `combo_itens`
+- `promocoes`
+- `caixas`
+- `pedidos`
+- `pedido_itens`
+- `movimentacoes_estoque`
+- `caixa_movimentos`
 - `auditoria`
 
-`databases/seed.sql` cria/atualiza:
+`databases/migration_cardapio_estoque_basico.sql` e a migracao incremental para
+levar um banco antigo para este modelo basico.
 
-- Usuario `admin@estoque.com`.
+Campos que nao fazem parte desta fase:
 
-Credenciais documentadas para teste:
+- `preco_compra`
+- `custo_unitario`
+- `validade`
+- `estoque_minimo`
+- alerta de estoque baixo
 
-- Email: `admin@estoque.com`
-- Senha esperada pelo hash atual: `admin123`
+## Credencial de teste
 
-## Problemas atuais a corrigir
+O seed cria/atualiza:
 
-1. Completar `databases/schema.sql` com as tabelas usadas pelo backend ativo:
-   `movimentacoes_estoque`, `caixas`, `caixa_movimentos` e `pedidos`.
-2. Remover comandos SQL de `backend/.env`.
-3. Conferir se `src/routes/product.routes.js` ainda tem utilidade; hoje o
-   produto ativo esta em `src/modules/products/`.
-4. Avaliar regras de permissao por papel. Hoje basta estar autenticado; nao ha
-   controle por `admin`, `operador` ou `cozinha` nas rotas de negocio.
-5. Criar smoke test de API depois que o schema estiver completo.
+- email: `admin@estoque.com`
+- senha: `admin123`
 
 ## Validacao executada
 
-Foi executado `node --check` nos principais arquivos do backend, incluindo
-`app.js`, `server.js`, rotas dos modulos e `src/routes/product.routes.js`.
+Validacoes ja executadas nesta fase:
 
-Resultado: sintaxe OK.
+- `mysql -uroot -p123456789 < databases/schema.sql`
+- `mysql -uroot -p123456789 < databases/migration_cardapio_estoque_basico.sql`
+- `node --check` nos arquivos JS alterados do backend
+- `npm run lint` em `frontend/`
+- `npm run build` em `frontend/`
+- smoke test de API com produto duplicando ingrediente na receita, agrupando em
+  uma linha e vendendo com estoque negativo permitido
+- screenshot Playwright da rota `/caixa` carregando a tela de PDV
 
-Observacao importante: sintaxe OK nao garante que todos os endpoints rodem,
-porque varios endpoints dependem de tabelas ausentes no schema atual.
+## Pendencias conhecidas
+
+- Centralizar `API_URL`, `getToken` e tratamento de resposta do frontend em um
+  helper unico.
+- Fazer uma bateria manual completa no navegador para login, cadastro de todos
+  os tipos, venda, estoque negativo, pedidos, cozinha e fechamento de caixa.
+- Criar testes automatizados de API quando o MVP estabilizar.

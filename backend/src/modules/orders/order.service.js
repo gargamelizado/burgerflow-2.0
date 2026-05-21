@@ -1,4 +1,13 @@
+const db = require('../../config/db');
 const orderRepository = require('./order.repository');
+const productRepository = require('../products/product.repository');
+const {
+  resolverIngredientesDoItem,
+  verificarEstoqueNegativo,
+  baixarEstoque,
+  mergeIngredientes,
+} = require('./orderStock.service');
+const { toNumber } = require('../../utils/itemRules');
 
 const statusPermitidos = ['novo', 'em_preparo', 'pronto', 'entregue', 'cancelado'];
 
@@ -6,18 +15,178 @@ const list = async () => {
   return orderRepository.list();
 };
 
-const create = async (data) => {
-  const numero = await orderRepository.getNextNumber();
+const getItemPrice = async (item, connection) => {
+  if (item.tipo === 'PROMOCAO') {
+    const promocao = await productRepository.findPromotionByItemId(
+      item.id,
+      connection
+    );
 
-  const pedido = {
-    numero,
-    cliente_nome: data.cliente_nome || 'Cliente',
-    tipo: data.tipo || 'balcao',
-    total: Number(data.total || 0),
-    observacao: data.observacao || '',
+    if (!promocao || !promocao.ativo) {
+      const error = new Error(`Promoção ${item.nome} não está ativa.`);
+      error.statusCode = 400;
+      throw error;
+    }
+
+    return {
+      preco: toNumber(promocao.preco_promocional),
+      item_original_id: promocao.item_original_id,
+      preco_original: toNumber(promocao.item_original_preco),
+    };
+  }
+
+  return {
+    preco: toNumber(item.preco_venda),
+    item_original_id: null,
+    preco_original: toNumber(item.preco_venda),
   };
+};
 
-  return orderRepository.create(pedido);
+const normalizeOrderItems = async (itens = [], connection) => {
+  if (!Array.isArray(itens) || itens.length === 0) {
+    const error = new Error('Pedido precisa ter pelo menos 1 item.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const normalized = [];
+  const ingredientes = [];
+
+  for (const itemPedido of itens) {
+    const itemId = Number(itemPedido.item_id || itemPedido.id);
+    const quantidade = toNumber(itemPedido.quantidade);
+
+    if (!itemId || quantidade <= 0) {
+      const error = new Error('Item do pedido e quantidade são obrigatórios.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const item = await productRepository.findBaseById(itemId, connection);
+
+    if (!item || !item.ativo) {
+      const error = new Error('Item do pedido não encontrado ou inativo.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (item.tipo === 'INGREDIENTE') {
+      const error = new Error('Ingrediente não pode ser item de pedido.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const priceInfo = await getItemPrice(item, connection);
+    const subtotal = priceInfo.preco * quantidade;
+    const descontoUnitario = Math.max(
+      priceInfo.preco_original - priceInfo.preco,
+      0
+    );
+    const ingredientesDoItem = await resolverIngredientesDoItem(
+      item.id,
+      quantidade,
+      connection
+    );
+
+    ingredientes.push(...ingredientesDoItem);
+
+    normalized.push({
+      item_id: item.id,
+      item_nome: item.nome,
+      item_tipo: item.tipo,
+      item_original_id: priceInfo.item_original_id,
+      quantidade,
+      preco_unitario: priceInfo.preco,
+      desconto: descontoUnitario * quantidade,
+      subtotal,
+    });
+  }
+
+  return {
+    itens: normalized,
+    ingredientes: mergeIngredientes(ingredientes),
+  };
+};
+
+const create = async (data) => {
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const normalized = await normalizeOrderItems(data.itens, connection);
+    const estoqueNegativo = await verificarEstoqueNegativo(
+      normalized.ingredientes,
+      connection
+    );
+
+    const caixa = data.caixa_id
+      ? { id: Number(data.caixa_id) }
+      : await orderRepository.findOpenCash(connection);
+
+    if (!caixa) {
+      const error = new Error('Abra o caixa antes de finalizar a venda.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const numero = await orderRepository.getNextNumber(connection);
+    const total = normalized.itens.reduce(
+      (sum, item) => sum + toNumber(item.subtotal),
+      0
+    );
+    const desconto = normalized.itens.reduce(
+      (sum, item) => sum + toNumber(item.desconto),
+      0
+    );
+
+    const pedidoId = await orderRepository.create(
+      {
+        numero,
+        caixa_id: caixa.id,
+        cliente_nome: data.cliente_nome || 'Cliente',
+        tipo: data.tipo || 'balcao',
+        total,
+        desconto,
+        forma_pagamento: data.forma_pagamento || 'dinheiro',
+        status_pagamento: data.status_pagamento || 'pago',
+        observacao: data.observacao || '',
+      },
+      connection
+    );
+
+    await orderRepository.createItems(pedidoId, normalized.itens, connection);
+    await baixarEstoque(normalized.ingredientes, pedidoId, connection);
+
+    await orderRepository.createCashSaleMovement(
+      {
+        caixa_id: caixa.id,
+        pedido_id: pedidoId,
+        valor: total,
+        forma_pagamento: data.forma_pagamento || 'dinheiro',
+        status_pagamento: data.status_pagamento || 'pago',
+        motivo: `Venda pedido ${numero}`,
+      },
+      connection
+    );
+
+    await connection.commit();
+
+    const pedido = await orderRepository.findById(pedidoId);
+
+    return {
+      message: 'Pedido registrado e estoque baixado com sucesso.',
+      pedido,
+      itens: normalized.itens,
+      ingredientes_baixados: normalized.ingredientes,
+      avisos_estoque: estoqueNegativo.avisos,
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 const updateStatus = async (id, status) => {

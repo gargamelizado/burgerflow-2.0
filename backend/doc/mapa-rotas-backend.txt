@@ -1,46 +1,75 @@
 Mapa de rotas do backend ativo - BurgerFlow 2.0
 Atualizado em: 2026-05-19
 
-Este arquivo foi mantido na raiz para compatibilidade com a documentacao
-antiga. A copia principal tambem esta em:
-
-backend/doc/mapa-rotas-backend.txt
-
-Rotas principais:
-
+Health
 - GET /api/health
+
+Auth
 - POST /api/auth/login
 - GET /api/auth/verify
+
+Itens
 - GET /api/itens
+- GET /api/itens/cardapio
 - GET /api/itens/:id
 - POST /api/itens
 - PUT /api/itens/:id
 - DELETE /api/itens/:id
+
+Produtos
 - GET /api/produtos
+- GET /api/produtos/:id
 - POST /api/produtos
+- PUT /api/produtos/:id
+- DELETE /api/produtos/:id
+
+Ingredientes
 - GET /api/ingredientes
+- GET /api/ingredientes/:id
 - POST /api/ingredientes
+- PUT /api/ingredientes/:id
+- DELETE /api/ingredientes/:id
+
+Combos
 - GET /api/combos
+- GET /api/combos/:id
 - POST /api/combos
+- PUT /api/combos/:id
+- DELETE /api/combos/:id
+
+Promocoes
 - GET /api/promocoes
+- GET /api/promocoes/:id
 - POST /api/promocoes
+- PUT /api/promocoes/:id
+- DELETE /api/promocoes/:id
+
+Cardapio
 - GET /api/cardapio
+
+Estoque
 - GET /api/estoque
 - POST /api/estoque/movimentar
 - GET /api/estoque/historico
+
+Caixa
 - GET /api/caixa/aberto
 - POST /api/caixa/abrir
 - POST /api/caixa/fechar
 - POST /api/caixa/movimento
 - GET /api/caixa/movimentos
+
+Pedidos
 - GET /api/pedidos
 - POST /api/pedidos
 - PATCH /api/pedidos/:id/status
+
+Cozinha
 - GET /api/cozinha/pedidos
 - PATCH /api/cozinha/pedidos/:id/status
 
-Observacoes:
-
+Observacoes
 - Rotas de negocio exigem token, exceto login e health.
+- DELETE de item/produto/ingrediente/combo/promocao desativa o registro.
 - Venda pelo PDV usa POST /api/pedidos.
 - Estoque negativo e permitido no fluxo de venda.

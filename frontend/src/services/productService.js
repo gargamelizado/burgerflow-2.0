@@ -26,49 +26,80 @@ const tratarResposta = async (response) => {
   return data;
 };
 
-export const listarProdutos = async () => {
-  const response = await fetch(`${API_URL}/produtos`, {
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
+const authHeaders = () => ({
+  Authorization: `Bearer ${getToken()}`,
+});
+
+export const listarItens = async () => {
+  const response = await fetch(`${API_URL}/itens`, {
+    headers: authHeaders(),
   });
 
   return tratarResposta(response);
 };
 
-export const cadastrarProduto = async (produto) => {
-  const response = await fetch(`${API_URL}/produtos`, {
+export const listarCardapio = async ({ categoria = 'todos', tipo = '' } = {}) => {
+  const params = new URLSearchParams();
+
+  if (categoria) {
+    params.set('categoria', categoria);
+  }
+
+  if (tipo) {
+    params.set('tipo', tipo);
+  }
+
+  const response = await fetch(`${API_URL}/cardapio?${params.toString()}`, {
+    headers: authHeaders(),
+  });
+
+  return tratarResposta(response);
+};
+
+export const buscarItem = async (id) => {
+  const response = await fetch(`${API_URL}/itens/${id}`, {
+    headers: authHeaders(),
+  });
+
+  return tratarResposta(response);
+};
+
+export const cadastrarItem = async (item) => {
+  const response = await fetch(`${API_URL}/itens`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
+      ...authHeaders(),
     },
-    body: JSON.stringify(produto),
+    body: JSON.stringify(item),
   });
 
   return tratarResposta(response);
 };
 
-export const editarProduto = async (id, produto) => {
-  const response = await fetch(`${API_URL}/produtos/${id}`, {
+export const editarItem = async (id, item) => {
+  const response = await fetch(`${API_URL}/itens/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
+      ...authHeaders(),
     },
-    body: JSON.stringify(produto),
+    body: JSON.stringify(item),
   });
 
   return tratarResposta(response);
 };
 
-export const deletarProduto = async (id) => {
-  const response = await fetch(`${API_URL}/produtos/${id}`, {
+export const desativarItem = async (id) => {
+  const response = await fetch(`${API_URL}/itens/${id}`, {
     method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
+    headers: authHeaders(),
   });
 
   return tratarResposta(response);
 };
+
+export const listarProdutos = listarItens;
+export const cadastrarProduto = cadastrarItem;
+export const editarProduto = editarItem;
+export const deletarProduto = desativarItem;

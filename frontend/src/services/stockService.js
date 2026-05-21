@@ -23,7 +23,7 @@ const tratarResposta = async (response) => {
 };
 
 export const listarEstoque = async () => {
-  const response = await fetch(`${API_URL}/produtos`, {
+  const response = await fetch(`${API_URL}/estoque`, {
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },
@@ -33,9 +33,10 @@ export const listarEstoque = async () => {
 };
 
 export const movimentarEstoque = async ({
-  produto_id,
+  ingrediente_id,
   tipo,
   quantidade,
+  unidade,
   motivo,
 }) => {
   const response = await fetch(`${API_URL}/estoque/movimentar`, {
@@ -45,9 +46,10 @@ export const movimentarEstoque = async ({
       Authorization: `Bearer ${getToken()}`,
     },
     body: JSON.stringify({
-      produto_id,
+      ingrediente_id,
       tipo,
       quantidade,
+      unidade,
       motivo,
     }),
   });

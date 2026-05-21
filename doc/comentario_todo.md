@@ -1,10 +1,9 @@
 # Comentario geral - BurgerFlow 2.0
 
-Atualizado em: 2026-05-15.
+Atualizado em: 2026-05-19.
 
-Este arquivo resume o estado atual do projeto inteiro. Ele deve ser usado como
-guia rapido antes de mexer no codigo, para nao confundir o que ja esta
-implementado com o que ainda esta incompleto.
+Este arquivo resume o estado atual do projeto para evitar confusao entre o MVP
+basico implementado agora e planos maiores de ERP/PDV para fases futuras.
 
 ## Visao geral
 
@@ -12,27 +11,68 @@ O projeto esta organizado como um monorepo simples:
 
 - `backend/`: API Node.js com Express, MySQL, JWT e bcrypt.
 - `frontend/`: aplicacao React + Vite.
-- `databases/`: scripts SQL atuais para criar o banco e usuario inicial.
-- `backend exemplo/`: referencia maior, com arquitetura e tabelas de futuro ERP.
+- `databases/`: schema, seed e migracao incremental do modelo basico.
+- `backend exemplo/`: referencia antiga/maior, nao e o backend ativo.
 
-O caminho principal hoje e manter o sistema funcionando de forma basica, sem
-apagar a estrutura MVC do backend. A regra importante e preservar os modulos em
-`backend/src/modules/` para evolucao futura.
+O escopo atual esta limitado a:
 
-## Estado atual do backend
+- cardapio
+- estoque
+- pedidos
+- caixa/PDV
 
-O backend sobe a partir de `backend/src/server.js` e monta a API em
-`backend/src/app.js`.
+## Modelo atual
 
-Rotas montadas hoje:
+Tipos de item aceitos:
+
+- `INGREDIENTE`
+- `PRODUTO`
+- `COMBO`
+- `PROMOCAO`
+
+Regras do modelo:
+
+- ingrediente controla estoque e nao aparece no cardapio
+- produto vende no cardapio e baixa ingredientes
+- combo vende no cardapio e contem produtos
+- promocao aponta para produto ou combo
+- o estoque baixa apenas ingredientes
+- o estoque pode ficar negativo
+- venda nao e bloqueada por falta de estoque
+- avisos de estoque negativo podem aparecer para o usuario
+
+Nao fazem parte do MVP atual:
+
+- `PRODUTO_SIMPLES`
+- `PRODUTO_COMPOSTO`
+- `preco_compra`
+- `custo_unitario`
+- `validade`
+- `estoque_minimo`
+- alerta de estoque baixo
+
+## Backend atual
+
+Rotas principais montadas em `backend/src/app.js`:
 
 - `GET /api/health`
 - `POST /api/auth/login`
 - `GET /api/auth/verify`
+- `GET /api/itens`
+- `GET /api/itens/:id`
+- `POST /api/itens`
+- `PUT /api/itens/:id`
+- `DELETE /api/itens/:id`
 - `GET /api/produtos`
 - `POST /api/produtos`
-- `PUT /api/produtos/:id`
-- `DELETE /api/produtos/:id`
+- `GET /api/ingredientes`
+- `POST /api/ingredientes`
+- `GET /api/combos`
+- `POST /api/combos`
+- `GET /api/promocoes`
+- `POST /api/promocoes`
+- `GET /api/cardapio`
+- `GET /api/estoque`
 - `POST /api/estoque/movimentar`
 - `GET /api/estoque/historico`
 - `GET /api/caixa/aberto`
@@ -48,72 +88,80 @@ Rotas montadas hoje:
 
 O backend usa `PORT=3006` por padrao e banco MySQL `burger_flow_2_0`.
 
-## Estado atual do frontend
+## Banco de dados atual
 
-O frontend tem telas para:
+`databases/schema.sql` cria o modelo atual completo do MVP:
 
-- Login.
-- Dashboard.
-- Pedidos.
-- Cardapio/produtos.
-- Estoque.
-- Cozinha.
-- Caixa, mas a rota `/caixa` ainda nao esta registrada em `App.jsx`.
+- `usuarios`
+- `itens`
+- `estoque_ingredientes`
+- `produto_ingredientes`
+- `combo_itens`
+- `promocoes`
+- `caixas`
+- `pedidos`
+- `pedido_itens`
+- `movimentacoes_estoque`
+- `caixa_movimentos`
+- `auditoria`
 
-Os services chamam a API diretamente em `http://localhost:3006/api`.
+`databases/migration_cardapio_estoque_basico.sql` existe para atualizar banco
+antigo sem recriar tudo do zero.
 
-## Pontos de atencao
+## Frontend atual
 
-1. `databases/schema.sql` so cria `usuarios`, `produtos` e `auditoria`.
-   Os modulos de estoque, caixa, pedidos e cozinha ja consultam tabelas que nao
-   existem nesse schema atual, como `movimentacoes_estoque`, `caixas`,
-   `caixa_movimentos` e `pedidos`.
+Rotas registradas em `frontend/src/App.jsx`:
 
-2. `backend/.env` contem comandos SQL no fim do arquivo, a partir de
-   `USE burger_flow_2_0;`. Isso nao deveria ficar em `.env`; deve virar script
-   `.sql` separado ou ser removido do arquivo de ambiente.
+- `/login`
+- `/dashboard`
+- `/pedidos`
+- `/cardapio`
+- `/estoque`
+- `/caixa`
+- `/cozinha`
 
-3. `backend/src/routes/product.routes.js` existe como uma rota simples antiga,
-   mas nao esta montada no `app.js`. O backend atual usa
-   `backend/src/modules/products/product.routes.js`.
+Telas principais:
 
-4. `frontend/src/components/config/api.js` esta vazio. Os services repetem a
-   constante `API_URL` e a funcao de tratamento de resposta.
+- Login
+- Dashboard
+- Pedidos
+- Cardapio / Cadastrar Item
+- Estoque
+- Caixa com PDV
+- Cozinha
 
-5. O menu mostra `Caixa`, mas `frontend/src/App.jsx` nao possui
-   `<Route path="/caixa" ...>`.
+Mensagens importantes do fluxo foram migradas para popups dentro da tela.
+Nao ha uso ativo de `alert`, `confirm`, `prompt` ou `window.*` em
+`frontend/src`.
 
-6. `PDV` e `ProductCompositionEditor` existem apenas como placeholders.
+## Fluxo de venda atual
 
-7. `mapa-rotas-backend.txt` e `mapa-arquivos-backend.txt` ainda apontam para
-   `backend exemplo/`, entao nao representam fielmente o backend ativo.
+1. Usuario abre caixa.
+2. PDV lista itens do cardapio.
+3. Usuario adiciona produto, combo ou promocao ao pedido.
+4. Frontend envia pedido para `POST /api/pedidos`.
+5. Backend resolve ingredientes.
+6. Backend calcula avisos de estoque negativo.
+7. Backend cria pedido e itens.
+8. Backend baixa estoque dos ingredientes, permitindo negativo.
+9. Backend registra movimento de caixa do tipo `venda`.
+10. Frontend mostra sucesso e, se existir, aviso de estoque negativo.
 
 ## Validacao executada
 
-Comandos executados em 2026-05-15:
+Evidencias ja executadas nesta fase:
 
-- `node --check` nos principais arquivos do backend: passou.
-- `npm run build` em `frontend/`: passou.
-- `npm run lint` em `frontend/`: falhou com 18 erros.
+- schema aplicado em MySQL
+- migracao aplicada em MySQL
+- sintaxe do backend verificada com `node --check`
+- `npm run lint` no frontend passou
+- `npm run build` no frontend passou
+- smoke test de API para cadastro/receita duplicada/venda com estoque negativo
+- screenshot Playwright da rota `/caixa` carregando PDV
 
-Principais erros do lint:
+## Pendencias recomendadas
 
-- Imports `React` nao usados em varios componentes.
-- `Caixa` importado em `App.jsx`, mas ainda nao usado por uma rota.
-- Regra `react-hooks/set-state-in-effect` em componentes que carregam dados no
-  `useEffect`.
-- Variavel `error` nao usada no `catch` do login.
-
-## Prioridades recomendadas
-
-1. Corrigir `databases/schema.sql` para incluir as tabelas usadas pelos modulos
-   ja montados: estoque, caixa e pedidos.
-2. Limpar `backend/.env`, tirando SQL de dentro dele.
-3. Registrar a rota `/caixa` no frontend ou remover o link do menu ate a tela
-   estar liberada.
-4. Centralizar `API_URL`, `getToken` e `tratarResposta` em um helper unico.
-5. Decidir se `backend/src/routes/product.routes.js` sera removido, corrigido ou
-   mantido apenas como referencia.
-6. Corrigir o lint do frontend.
-7. Depois disso, rodar smoke test completo: login, produtos, estoque, caixa,
-   pedidos e cozinha.
+- Rodar checklist manual completo no navegador.
+- Centralizar configuracao de API do frontend.
+- Criar testes automatizados de API para o fluxo de pedido e estoque negativo.
+- Revisar permissao por papel em rotas sensiveis antes de usar em producao.

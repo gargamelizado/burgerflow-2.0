@@ -1,35 +1,76 @@
 // colocar icone nos botaoes
 import { useEffect, useMemo, useState } from 'react';
-import { listarProdutos } from '../../services/productService';
+import { listarCardapio } from '../../services/productService';
+import { criarPedido } from '../../services/orderService';
 import './PDV.css';
+
 
 export default function PDV({ caixaAberto, onVendaFinalizada }) {
   const [produtos, setProdutos] = useState([]);
   const [itensPedido, setItensPedido] = useState([]);
   const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
+  const [formaPagamento, setFormaPagamento] = useState('dinheiro');
   const [erro, setErro] = useState('');
-  const [carregando, setCarregando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [popup, setPopup] = useState(null);
+  const [popupQuantidade, setPopupQuantidade] = useState(null);
 
-  const carregarProdutos = async () => {
-    try {
-      setCarregando(true);
+  const abrirPopup = ({
+    tipo = 'info',
+    titulo = 'Mensagem',
+    mensagens = [],
+    textoConfirmar = 'OK',
+    textoCancelar = '',
+    onConfirm = null,
+  }) => {
+    setPopup({
+      tipo,
+      titulo,
+      mensagens: Array.isArray(mensagens) ? mensagens : [mensagens],
+      textoConfirmar,
+      textoCancelar,
+      onConfirm,
+    });
+  };
 
-      const data = await listarProdutos();
+  const fecharPopup = () => {
+    setPopup(null);
+  };
 
-      const produtosAtivos = data.filter((produto) => Boolean(produto.ativo));
+  const confirmarPopup = async () => {
+    const callback = popup?.onConfirm;
+    fecharPopup();
 
-      setProdutos(produtosAtivos);
-      setErro('');
-    } catch (error) {
-      setErro(error.message);
-    } finally {
-      setCarregando(false);
+    if (callback) {
+      await callback();
     }
   };
 
   useEffect(() => {
-    carregarProdutos();
-  }, []);
+    let ignorarResposta = false;
+
+    listarCardapio({ categoria: categoriaAtiva })
+      .then((data) => {
+        if (!ignorarResposta) {
+          setProdutos(data);
+          setErro('');
+        }
+      })
+      .catch((error) => {
+        if (!ignorarResposta) {
+          setErro(error.message);
+        }
+      })
+      .finally(() => {
+        if (!ignorarResposta) {
+          setCarregando(false);
+        }
+      });
+
+    return () => {
+      ignorarResposta = true;
+    };
+  }, [categoriaAtiva]);
 
   const categorias = useMemo(() => {
     const categoriasBase = [
@@ -51,68 +92,13 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
     return Array.from(new Set([...categoriasBase, ...categoriasBanco]));
   }, [produtos]);
 
-  const produtosFiltrados = useMemo(() => {
-    if (categoriaAtiva === 'todos') {
-      return produtos;
-    }
-
-    return produtos.filter(
-      (produto) =>
-        produto.categoria?.trim().toLowerCase() === categoriaAtiva
-    );
-  }, [produtos, categoriaAtiva]);
+  const produtosFiltrados = useMemo(() => produtos, [produtos]);
 
   const getPrecoProduto = (produto) => {
-    return Number(produto.preco || 0);
+    return Number(produto.preco || produto.preco_venda || 0);
   };
 
-  const adicionarItem = (produto) => {
-    const preco = getPrecoProduto(produto);
-
-    const itemExiste = itensPedido.find((item) => item.id === produto.id);
-
-    if (itemExiste) {
-      const itensAtualizados = itensPedido.map((item) =>
-        item.id === produto.id
-          ? {
-              ...item,
-              quantidade: item.quantidade + 1,
-            }
-          : item
-      );
-
-      setItensPedido(itensAtualizados);
-      return;
-    }
-
-    setItensPedido([
-      ...itensPedido,
-      {
-        id: produto.id,
-        nome: produto.nome,
-        preco,
-        categoria: produto.categoria,
-        quantidade: 1,
-      },
-    ]);
-  };
-
-  const adicionarQuantidadePersonalizada = (produto) => {
-    const quantidadeDigitada = window.prompt(
-      `Informe a quantidade de ${produto.nome}:`
-    );
-
-    if (quantidadeDigitada === null) {
-      return;
-    }
-
-    const quantidade = Number(quantidadeDigitada);
-
-    if (!quantidade || quantidade <= 0) {
-      alert('Informe uma quantidade válida.');
-      return;
-    }
-
+  const adicionarProdutoComQuantidade = (produto, quantidade) => {
     const preco = getPrecoProduto(produto);
 
     const itemExiste = itensPedido.find((item) => item.id === produto.id);
@@ -137,14 +123,47 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
         id: produto.id,
         nome: produto.nome,
         preco,
+        tipo: produto.tipo,
         categoria: produto.categoria,
         quantidade,
       },
     ]);
   };
 
+  const adicionarItem = (produto) => {
+    adicionarProdutoComQuantidade(produto, 1);
+  };
+
+  const adicionarQuantidadePersonalizada = (produto) => {
+    setPopupQuantidade({
+      produto,
+      quantidade: '',
+    });
+  };
+
+  const confirmarQuantidadePersonalizada = () => {
+    const quantidade = Number(popupQuantidade?.quantidade || 0);
+
+    if (!quantidade || quantidade <= 0) {
+      setPopupQuantidade(null);
+      abrirPopup({
+        tipo: 'erro',
+        titulo: 'Quantidade inválida',
+        mensagens: 'Informe uma quantidade maior que zero.',
+      });
+      return;
+    }
+
+    adicionarProdutoComQuantidade(popupQuantidade.produto, quantidade);
+    setPopupQuantidade(null);
+  };
+
   const editarItem = (produto) => {
-    alert(`Edição/customização de ${produto.nome} será feita no próximo passo.`);
+    abrirPopup({
+      tipo: 'info',
+      titulo: 'Edição do item',
+      mensagens: `Edição/customização de ${produto.nome} será feita no próximo passo.`,
+    });
   };
 
   const removerItem = (produtoId) => {
@@ -173,45 +192,89 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
   };
 
   const limparPedido = () => {
-    const confirmar = window.confirm('Deseja limpar o pedido atual?');
-
-    if (!confirmar) {
-      return;
-    }
-
-    setItensPedido([]);
+    abrirPopup({
+      tipo: 'confirmacao',
+      titulo: 'Limpar pedido',
+      mensagens: 'Deseja limpar o pedido atual?',
+      textoConfirmar: 'Limpar',
+      textoCancelar: 'Cancelar',
+      onConfirm: () => setItensPedido([]),
+    });
   };
 
   const totalPedido = itensPedido.reduce((total, item) => {
     return total + item.preco * item.quantidade;
   }, 0);
 
+  const processarFinalizacao = async () => {
+    try {
+      const resultado = await criarPedido({
+        caixa_id: caixaAberto.id,
+        cliente_nome: 'Cliente',
+        tipo: 'balcao',
+        forma_pagamento: formaPagamento,
+        status_pagamento: 'pago',
+        itens: itensPedido.map((item) => ({
+          item_id: item.id,
+          quantidade: item.quantidade,
+        })),
+      });
+
+      const avisos = resultado.avisos_estoque || [];
+      const mensagens = [resultado.message || 'Pedido finalizado com sucesso.'];
+
+      if (avisos.length > 0) {
+        mensagens.push(...avisos.map((aviso) => aviso.message));
+      }
+
+      abrirPopup({
+        tipo: avisos.length > 0 ? 'aviso' : 'sucesso',
+        titulo: avisos.length > 0 ? 'Venda finalizada com aviso' : 'Venda finalizada',
+        mensagens,
+      });
+      setItensPedido([]);
+      setErro('');
+
+      if (onVendaFinalizada) {
+        await onVendaFinalizada();
+      }
+    } catch (error) {
+      setErro(error.message);
+      abrirPopup({
+        tipo: 'erro',
+        titulo: 'Erro ao finalizar',
+        mensagens: error.message,
+      });
+    }
+  };
+
   const finalizarPedido = async () => {
     if (!caixaAberto) {
-      alert('Abra o caixa antes de finalizar um pedido.');
+      abrirPopup({
+        tipo: 'erro',
+        titulo: 'Caixa fechado',
+        mensagens: 'Abra o caixa antes de finalizar um pedido.',
+      });
       return;
     }
 
     if (itensPedido.length === 0) {
-      alert('Adicione pelo menos um item ao pedido.');
+      abrirPopup({
+        tipo: 'aviso',
+        titulo: 'Pedido vazio',
+        mensagens: 'Adicione pelo menos um item ao pedido.',
+      });
       return;
     }
 
-    const confirmar = window.confirm(
-      `Deseja finalizar o pedido no valor de R$ ${totalPedido.toFixed(2)}?`
-    );
-
-    if (!confirmar) {
-      return;
-    }
-
-    alert('Pedido finalizado com sucesso.');
-
-    setItensPedido([]);
-
-    if (onVendaFinalizada) {
-      await onVendaFinalizada();
-    }
+    abrirPopup({
+      tipo: 'confirmacao',
+      titulo: 'Finalizar pedido',
+      mensagens: `Deseja finalizar o pedido no valor de R$ ${totalPedido.toFixed(2)}?`,
+      textoConfirmar: 'Finalizar',
+      textoCancelar: 'Cancelar',
+      onConfirm: processarFinalizacao,
+    });
   };
 
   return (
@@ -250,7 +313,7 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
                   <h2>{produto.nome}</h2>
 
                   <span className="itemCategoria">
-                    {produto.categoria || 'Sem categoria'}
+                    {produto.tipo} · {produto.categoria || 'Sem categoria'}
                   </span>
 
                   <p>R$ {getPrecoProduto(produto).toFixed(2)}</p>
@@ -340,6 +403,18 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
                 </div>
 
                 <div className="finalizar">
+                  <select
+                    value={formaPagamento}
+                    onChange={(event) => setFormaPagamento(event.target.value)}
+                    placeholder="Forma de pagamento"
+                  >
+                    <option value="">Formar de Pagamento</option>
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="pix">Pix</option>
+                    <option value="cartao_credito">Cartão crédito</option>
+                    <option value="cartao_debito">Cartão débito</option>
+                  </select>
+
                   <button type="button" onClick={finalizarPedido}>
                     Finalizar pedido
                   </button>
@@ -357,6 +432,86 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
           )}
         </aside>
       </div>
+
+      {popup && (
+        <div className="pdvPopupOverlay" role="dialog" aria-modal="true">
+          <div className={`pdvPopup pdvPopup-${popup.tipo}`}>
+            <h3>{popup.titulo}</h3>
+
+            <div className="pdvPopupMessages">
+              {popup.mensagens.map((mensagem, index) => (
+                <p key={`${popup.titulo}-${index}`}>{mensagem}</p>
+              ))}
+            </div>
+
+            <div className="pdvPopupActions">
+              {popup.textoCancelar && (
+                <button
+                  type="button"
+                  className="pdvPopupCancel"
+                  onClick={fecharPopup}
+                >
+                  {popup.textoCancelar}
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="pdvPopupConfirm"
+                onClick={confirmarPopup}
+              >
+                {popup.textoConfirmar}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {popupQuantidade && (
+        <div className="pdvPopupOverlay" role="dialog" aria-modal="true">
+          <div className="pdvPopup pdvPopup-confirmacao">
+            <h3>Quantidade</h3>
+
+            <div className="pdvPopupMessages">
+              <p>{popupQuantidade.produto.nome}</p>
+            </div>
+
+            <input
+              className="pdvPopupInput"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="Quantidade"
+              value={popupQuantidade.quantidade}
+              onChange={(event) =>
+                setPopupQuantidade((current) => ({
+                  ...current,
+                  quantidade: event.target.value,
+                }))
+              }
+              autoFocus
+            />
+
+            <div className="pdvPopupActions">
+              <button
+                type="button"
+                className="pdvPopupCancel"
+                onClick={() => setPopupQuantidade(null)}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className="pdvPopupConfirm"
+                onClick={confirmarQuantidadePersonalizada}
+              >
+                Adicionar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

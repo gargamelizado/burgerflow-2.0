@@ -20,12 +20,8 @@ const menuItems = [
   { to: '/cozinha', label: 'Cozinha', icon: cozinha },
 ];
 
-const getInitialCollapsed = () => {
-  return typeof window !== 'undefined' && window.innerWidth <= 900;
-};
-
 const MainLayout = ({ children, onLogout }) => {
-  const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsed);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const toggleSidebar = () => {
     setIsCollapsed((current) => !current);
@@ -49,7 +45,7 @@ const MainLayout = ({ children, onLogout }) => {
           <div className="brandBlock">
             <img src={Logo} alt="Burger Flow" className="brandLogo" />
             <div className="brandText">
-              <strong>Burger Flow</strong>
+              <strong>Burger Flow 2.0</strong>
               <span>Operação</span>
             </div>
           </div>
@@ -78,11 +74,7 @@ const MainLayout = ({ children, onLogout }) => {
               className={({ isActive }) =>
                 `sidebarLink ${isActive ? 'active' : ''}`
               }
-              onClick={() => {
-                if (window.innerWidth <= 900) {
-                  closeSidebar();
-                }
-              }}
+              onClick={closeSidebar}
             >
               <span className="sidebarIcon" aria-hidden="true">
                 <img src={item.icon} alt="" />

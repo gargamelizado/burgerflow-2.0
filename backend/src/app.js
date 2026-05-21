@@ -3,6 +3,8 @@ const cors = require('cors');
 const errorMiddleware = require('./middlewares/error.middleware');
 const authRoutes = require('./modules/auth/auth.routes');
 const productRoutes = require('./modules/products/product.routes');
+const createItemTypeRoutes = require('./modules/products/itemType.routes');
+const cardapioRoutes = require('./modules/products/cardapio.routes');
 const inventoryRoutes = require('./modules/inventory/inventory.routes');
 const cashRoutes = require('./modules/cash/cash.routes');
 const app = express();
@@ -18,7 +20,12 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/produtos', productRoutes);
+app.use('/api/itens', productRoutes);
+app.use('/api/produtos', createItemTypeRoutes('PRODUTO'));
+app.use('/api/ingredientes', createItemTypeRoutes('INGREDIENTE'));
+app.use('/api/combos', createItemTypeRoutes('COMBO'));
+app.use('/api/promocoes', createItemTypeRoutes('PROMOCAO'));
+app.use('/api/cardapio', cardapioRoutes);
 app.use('/api/estoque', inventoryRoutes);
 app.use('/api/caixa', cashRoutes);
 app.use('/api/pedidos', orderRoutes);
@@ -32,5 +39,4 @@ app.use((req, res) => {
 
 app.use(errorMiddleware);
 module.exports = app;
-
 

@@ -1,27 +1,36 @@
-backend exemplo/src/modules/auth/auth.routes.js
-backend exemplo/src/modules/auth/auth.controller.js
-backend exemplo/src/modules/integrations/nodeRed.controller.js
-backend exemplo/src/modules/integrations/nodeRed.routes.js
-backend exemplo/src/modules/cash/cash.controller.js
-backend exemplo/src/modules/cash/cash.routes.js
-backend exemplo/src/modules/recover-order/recoverOrder.routes.js
-backend exemplo/src/modules/recover-order/recoverOrder.controller.js
-backend exemplo/src/modules/products/product.routes.js
-backend exemplo/src/modules/products/product.controller.js
-backend exemplo/src/modules/kitchen/kitchen.controller.js
-backend exemplo/src/modules/kitchen/kitchen.routes.js
+Mapa de arquivos do backend ativo - BurgerFlow 2.0
+Atualizado em: 2026-05-19
 
+Este arquivo foi mantido na raiz para compatibilidade com a documentacao
+antiga. A copia principal tambem esta em:
 
-curl -X POST http://localhost:3006/api/produtos \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJhZG1pbkBlc3RvcXVlLmNvbSIsIm5vbWUiOiJBZG1pbmlzdHJhZG9yIiwibml2ZWxfYWNlc3NvIjoiYWRtaW4iLCJpYXQiOjE3NzgwMDI4MzksImV4cCI6MTc3ODA4OTIzOX0.fdkfsunVlquilkWYYn359EetvXmc-STstT0rT4bpnsk" \
-  -d '{
-    "nome": "X-Burger",
-    "categoria": "Lanches",
-    "tipo": "simples",
-    "preco": 18.90,
-    "custo": 8.50,
-    "quantidade_estoque": 20,
-    "unidade": "un",
-    "ativo": true
-  }'
+backend/doc/mapa-arquivos-backend.txt
+
+Arquivos principais:
+
+backend/src/app.js
+backend/src/server.js
+backend/src/config/db.js
+backend/src/config/env.js
+backend/src/middlewares/auth.middleware.js
+backend/src/middlewares/error.middleware.js
+backend/src/utils/asyncHandler.js
+backend/src/utils/itemRules.js
+
+Modulos:
+
+backend/src/modules/auth/
+backend/src/modules/products/
+backend/src/modules/inventory/
+backend/src/modules/orders/
+backend/src/modules/cash/
+backend/src/modules/kitchen/
+
+Banco:
+
+databases/schema.sql
+databases/seed.sql
+databases/migration_cardapio_estoque_basico.sql
+
+Observacao:
+backend exemplo/ e referencia antiga. O backend ativo fica em backend/src.

@@ -61,12 +61,16 @@ const close = async ({ valor_final, observacao }) => {
     .filter((movimento) => movimento.tipo === 'suprimento')
     .reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
 
+  const totalVendas = movimentos
+    .filter((movimento) => movimento.tipo === 'venda')
+    .reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
+
   const totalSangrias = movimentos
     .filter((movimento) => movimento.tipo === 'sangria')
     .reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
 
   const valorInicial = Number(caixaAberto.valor_inicial || 0);
-  const valorEsperado = valorInicial + totalSuprimentos - totalSangrias;
+  const valorEsperado = valorInicial + totalVendas + totalSuprimentos - totalSangrias;
   const diferenca = valorFinalNumber - valorEsperado;
 
   const caixa = await cashRepository.close({
@@ -82,6 +86,7 @@ const close = async ({ valor_final, observacao }) => {
     caixa,
     resumo: {
       valor_inicial: valorInicial,
+      total_vendas: totalVendas,
       total_suprimentos: totalSuprimentos,
       total_sangrias: totalSangrias,
       valor_esperado: valorEsperado,

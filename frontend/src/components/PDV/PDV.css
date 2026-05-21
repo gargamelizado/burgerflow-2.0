@@ -50,6 +50,7 @@
   align-items: start;
 }
 
+
 .pdvProdutos,
 .pdvPedido {
   background-color: #fff;
@@ -204,17 +205,30 @@
 }
 
 .finalizar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 8px;
 }
 
 .finalizar button,
-.btnLimparPedido {
+.btnLimparPedido,
+.finalizar select {
   width: 100%;
   border: none;
   border-radius: 10px;
   padding: 12px 16px;
-  color: #fff;
   font-weight: 700;
+}
+
+.finalizar select {
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #222;
+}
+
+.finalizar button,
+.btnLimparPedido {
+  color: #fff;
   cursor: pointer;
 }
 
@@ -231,6 +245,106 @@
   opacity: 0.85;
 }
 
+.pdvPopupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(20, 20, 25, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pdvPopup {
+  width: min(460px, 100%);
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-top: 6px solid #4b5563;
+  border-radius: 10px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  padding: 22px;
+}
+
+.pdvPopup-sucesso {
+  border-top-color: #198754;
+}
+
+.pdvPopup-aviso,
+.pdvPopup-confirmacao {
+  border-top-color: #d99a00;
+}
+
+.pdvPopup-erro {
+  border-top-color: #b00020;
+}
+
+.pdvPopup h3 {
+  color: #222;
+  font-size: 22px;
+  margin: 0 0 12px;
+}
+
+.pdvPopupMessages {
+  display: grid;
+  gap: 8px;
+  color: #3d3d3d;
+  line-height: 1.45;
+}
+
+.pdvPopupMessages p {
+  margin: 0;
+}
+
+.pdvPopupInput {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 14px;
+  font-size: 16px;
+  outline: none;
+}
+
+.pdvPopupInput:focus {
+  border-color: #d40303;
+}
+
+.pdvPopupActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pdvPopupActions button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pdvPopupCancel {
+  background: #eef0f3;
+  color: #333;
+}
+
+.pdvPopupConfirm {
+  background: #d40303;
+  color: #fff;
+}
+
+.pdvPopup-sucesso .pdvPopupConfirm {
+  background: #198754;
+}
+
+.pdvPopup-aviso .pdvPopupConfirm,
+.pdvPopup-confirmacao .pdvPopupConfirm {
+  background: #d99a00;
+  color: #222;
+}
+
 @media (max-width: 1100px) {
   .pdvLayout {
     grid-template-columns: 1fr;
@@ -238,5 +352,9 @@
 
   .pdvPedido {
     position: static;
+  }
+
+  .finalizar {
+    grid-template-columns: 1fr;
   }
 }

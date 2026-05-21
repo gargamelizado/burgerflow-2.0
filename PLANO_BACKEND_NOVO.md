@@ -1,82 +1,139 @@
-# Plano do Backend Novo - BurgerFlow
+# Plano do backend - BurgerFlow 2.0
 
-## Regra principal
+Atualizado em: 2026-05-19.
 
-Preservar o frontend atual e reconstruir o backend de forma limpa, usando Node.js, Express, MySQL, JWT, bcrypt e arquitetura Route -> Controller -> Service -> Repository -> MySQL.
+Este plano reflete a fase atual do projeto. A ideia anterior de reconstruir um
+ERP maior fica para depois; agora o foco e manter o MVP simples funcionando.
 
-## Backend exemplo usado como referência
+## Stack atual
 
-Arquivos analisados:
+- Node.js
+- Express
+- MySQL
+- JWT
+- bcrypt
+- MVC simples com Service e Repository
 
-- backend exemplo/src/modules/auth/auth.routes.js
-- backend exemplo/src/modules/auth/auth.controller.js
-- backend exemplo/src/modules/cash/cash.routes.js
-- backend exemplo/src/modules/cash/cash.controller.js
-- backend exemplo/src/modules/products/product.routes.js
-- backend exemplo/src/modules/products/product.controller.js
-- backend exemplo/src/modules/kitchen/kitchen.routes.js
-- backend exemplo/src/modules/kitchen/kitchen.controller.js
-- backend exemplo/src/modules/recover-order/recoverOrder.routes.js
-- backend exemplo/src/modules/recover-order/recoverOrder.controller.js
+Padrao:
 
-## Módulos prioritários do MVP
+```text
+Route -> Controller -> Service -> Repository -> MySQL
+```
 
-1. Auth
-2. Produtos
-3. Caixa
-4. Vendas
-5. Cozinha
-6. Dashboard
-7. Recuperador de pedidos
-8. Estoque
+## Escopo da fase atual
 
-## Rotas iniciais obrigatórias
+- Auth basico
+- Cadastro de itens
+- Cardapio
+- Estoque de ingredientes
+- Combos
+- Promocoes
+- Pedidos
+- Caixa/PDV
+- Cozinha basica
 
-### Auth
+## Tipos permitidos
 
-- POST /api/auth/login
-- GET /api/auth/verify
-- GET /api/auth/usuarios
-- POST /api/auth/register
-- PUT /api/auth/usuarios/:id
-- DELETE /api/auth/usuarios/:id
+- `INGREDIENTE`
+- `PRODUTO`
+- `COMBO`
+- `PROMOCAO`
 
-### Produtos
+Fora do escopo:
 
-- GET /api/produtos
-- POST /api/produtos
-- PUT /api/produtos/:id
-- DELETE /api/produtos/:id
-
-### Caixa
-
-- GET /api/caixa/aberto
-- POST /api/caixa/abrir
-- POST /api/caixa/movimento
-- POST /api/caixa/fechar
-- GET /api/caixa/:id/relatorio
-
-### Cozinha
-
-- GET /api/cozinha/pedidos
-- PATCH /api/cozinha/pedidos/:id/status
-
-### Recuperador de pedidos
-
-- GET /api/recuperador-pedidos
-- GET /api/recuperador-pedidos/:numero
-- PATCH /api/recuperador-pedidos/:id/recuperar
-
-## Ignorar nesta fase
-
+- `PRODUTO_SIMPLES`
+- `PRODUTO_COMPOSTO`
+- custo/lucro real
+- estoque minimo
+- alerta de estoque baixo
+- validade
 - Node-RED
-- integrações externas
-- microserviços
+- microservicos
 - multi-loja
 - Prisma
-- MySQL 
 
+## Regras de estoque
 
-./databases/seed.sql
-mysql -u root -p < ./databases/schema.sql
-mysql -u root -p < ./databases/seed.sql
+- Ingrediente controla estoque.
+- Produto baixa ingredientes.
+- Combo baixa produtos internos e seus ingredientes.
+- Promocao usa a composicao do item original.
+- O estoque baixa somente ingredientes.
+- Estoque negativo e permitido.
+- Venda nao e bloqueada por falta de estoque.
+- Aviso de estoque negativo deve ser retornado ao frontend.
+
+## Tabelas atuais
+
+- `usuarios`
+- `itens`
+- `estoque_ingredientes`
+- `produto_ingredientes`
+- `combo_itens`
+- `promocoes`
+- `caixas`
+- `pedidos`
+- `pedido_itens`
+- `movimentacoes_estoque`
+- `caixa_movimentos`
+- `auditoria`
+
+## Rotas atuais
+
+Auth:
+
+- `POST /api/auth/login`
+- `GET /api/auth/verify`
+
+Itens:
+
+- `GET /api/itens`
+- `GET /api/itens/:id`
+- `POST /api/itens`
+- `PUT /api/itens/:id`
+- `DELETE /api/itens/:id`
+
+Cardapio:
+
+- `GET /api/cardapio`
+
+Estoque:
+
+- `GET /api/estoque`
+- `POST /api/estoque/movimentar`
+- `GET /api/estoque/historico`
+
+Caixa:
+
+- `GET /api/caixa/aberto`
+- `POST /api/caixa/abrir`
+- `POST /api/caixa/movimento`
+- `POST /api/caixa/fechar`
+- `GET /api/caixa/movimentos`
+
+Pedidos:
+
+- `GET /api/pedidos`
+- `POST /api/pedidos`
+- `PATCH /api/pedidos/:id/status`
+
+Cozinha:
+
+- `GET /api/cozinha/pedidos`
+- `PATCH /api/cozinha/pedidos/:id/status`
+
+## Proximas melhorias recomendadas
+
+1. Rodar teste manual completo no navegador.
+2. Centralizar helper de API no frontend.
+3. Criar testes automatizados de backend para pedido e estoque negativo.
+4. Melhorar permissoes por perfil antes de producao.
+5. Depois do MVP, avaliar dashboard gerencial e relatorios.
+
+## Validacoes da fase
+
+- `node --check` nos arquivos alterados do backend.
+- `npm run lint` em `frontend/`.
+- `npm run build` em `frontend/`.
+- smoke test de API com venda deixando estoque negativo.
+- screenshot Playwright de `/caixa`.

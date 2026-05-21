@@ -1,6 +1,6 @@
 # Comentario do frontend - BurgerFlow 2.0
 
-Atualizado em: 2026-05-15.
+Atualizado em: 2026-05-19.
 
 O frontend e uma aplicacao React + Vite com `react-router`. A autenticacao e
 controlada no cliente por `localStorage`, usando `isLoggedIn`, `token` e
@@ -11,24 +11,29 @@ controlada no cliente por `localStorage`, usando `isLoggedIn`, `token` e
 Arquivos principais:
 
 - `src/main.jsx`: entrada do React.
-- `src/App.jsx`: define estado de login e rotas.
+- `src/App.jsx`: define login e rotas.
 - `src/components/Layout/MainLayout.jsx`: menu lateral e botao sair.
 
-Rotas registradas em `App.jsx`:
+Rotas registradas:
 
 - `/login`
 - `/dashboard`
 - `/pedidos`
 - `/cardapio`
 - `/estoque`
+- `/caixa`
 - `/cozinha`
-- `*` redireciona para `/login`
 
-Ponto de atencao:
+## Mensagens e popups
 
-- `MainLayout.jsx` tem link para `/caixa`, e `App.jsx` importa `Caixa`, mas a
-  rota `/caixa` nao esta registrada. Hoje clicar em Caixa cai no wildcard e
-  redireciona para login.
+As telas operacionais usam popup visual dentro da propria aplicacao para
+sucesso, erro, confirmacao e avisos.
+
+Checagem feita:
+
+- `rg -n "\b(alert|confirm|prompt)\s*\(|window\." frontend/src`
+
+Resultado esperado: sem ocorrencias.
 
 ## Telas
 
@@ -36,144 +41,140 @@ Ponto de atencao:
 
 Arquivo: `src/components/Login/Login.jsx`
 
-- Envia `POST http://localhost:3006/api/auth/login`.
-- Envia `email` e `senha`.
-- Salva `token`, `usuario` e `isLoggedIn` no `localStorage`.
-- Redireciona para `/dashboard`.
-
-Pendente:
-
-- A URL da API esta fixa no componente.
-- O `catch (error)` nao usa a variavel `error`, gerando erro de lint.
+- envia `POST http://localhost:3006/api/auth/login`
+- salva `token`, `usuario` e `isLoggedIn` no `localStorage`
+- redireciona para `/dashboard`
 
 ### Dashboard
 
 Arquivo: `src/components/Dashboard/Dashboard.jsx`
 
-- Tela estatica com cards de pedidos, vendas e itens no cardapio.
+- tela inicial do sistema apos login
+- mostra cards gerais do BurgerFlow
 
-Pendente:
+### Cardapio / Cadastrar Item
 
-- Ainda nao consome API para exibir numeros reais.
+Arquivos:
 
-### Cardapio
+- `src/components/Cardapio/Cardapio.jsx`
+- `src/components/Cardapio/Cardapio.css`
+- `src/services/productService.js`
 
-Arquivo: `src/components/Cardapio/Cardapio.jsx`
+Funcionalidades:
 
-- Lista produtos.
-- Cadastra produtos.
-- Edita produtos em modal.
-- Deleta produtos apos confirmacao.
-- Usa `src/services/productService.js`.
+- lista itens cadastrados
+- cadastra `INGREDIENTE`, `PRODUTO`, `COMBO` e `PROMOCAO`
+- edita item em popup
+- desativa item
+- muda o formulario conforme o tipo selecionado
+- nao salva categoria `todos`
 
-API consumida:
+Fluxos:
 
-- `GET /api/produtos`
-- `POST /api/produtos`
-- `PUT /api/produtos/:id`
-- `DELETE /api/produtos/:id`
+- ingrediente: entrada por `cx`, `pacote` ou `medida`
+- produto: vincula um ou mais ingredientes
+- combo: vincula produtos
+- promocao: aponta para produto ou combo
 
-Pendente:
+APIs consumidas:
 
-- O formulario principal nao mostra campo de categoria, apesar da tabela exibir
-  categoria e o state possuir `categoria`.
-- A edicao tambem nao mostra campo de categoria.
+- `GET /api/itens`
+- `GET /api/itens/:id`
+- `POST /api/itens`
+- `PUT /api/itens/:id`
+- `DELETE /api/itens/:id`
 
 ### Estoque
 
-Arquivo: `src/components/Estoque/Estoque.jsx`
+Arquivos:
 
-- Lista produtos.
-- Registra entrada e saida de estoque.
-- Lista historico de movimentacoes.
-- Usa `src/services/stockService.js`.
+- `src/components/Estoque/Estoque.jsx`
+- `src/components/Estoque/Estoque.css`
+- `src/services/stockService.js`
 
-API consumida:
+Funcionalidades:
 
-- `GET /api/produtos`
+- lista apenas ingredientes em estoque
+- registra entrada, saida ou ajuste
+- permite estoque negativo
+- mostra historico de movimentacoes
+- usa popup para informar resultado ou erro
+
+APIs consumidas:
+
+- `GET /api/estoque`
 - `POST /api/estoque/movimentar`
 - `GET /api/estoque/historico`
 
-Pendente:
+### Caixa e PDV
 
-- Depende da tabela `movimentacoes_estoque`, ausente no schema atual do banco.
+Arquivos:
 
-### Pedidos
+- `src/components/Caixa/Caixa.jsx`
+- `src/components/Caixa/Caixa.css`
+- `src/components/PDV/PDV.jsx`
+- `src/components/PDV/PDV.css`
+- `src/services/cashService.js`
+- `src/services/orderService.js`
 
-Arquivo: `src/components/Pedidos/Pedidos.jsx`
+Caixa:
 
-- Cria pedidos.
-- Lista pedidos.
-- Atualiza status pelo select.
-- Usa `src/services/orderService.js`.
+- busca caixa aberto
+- abre caixa
+- registra suprimento e sangria
+- lista movimentos
+- fecha caixa calculando valor esperado e diferenca
 
-API consumida:
+PDV:
 
-- `GET /api/pedidos`
-- `POST /api/pedidos`
-- `PATCH /api/pedidos/:id/status`
+- aparece dentro do caixa quando existe caixa aberto
+- lista itens do cardapio
+- filtra por categoria
+- adiciona item ao pedido
+- permite informar quantidade em popup
+- calcula total
+- finaliza pedido no backend
+- mostra aviso visual se algum ingrediente ficar negativo
+- nao bloqueia finalizar venda por falta de estoque
 
-Pendente:
-
-- Depende da tabela `pedidos`, ausente no schema atual.
-- Ainda nao possui itens do pedido nem integracao real com PDV/venda.
-
-### Cozinha
-
-Arquivo: `src/components/Cozinha/Cozinha.jsx`
-
-- Lista pedidos pendentes.
-- Permite mudar status para `em_preparo`, `pronto` e `entregue`.
-- Usa `src/services/kitchenService.js`.
-
-API consumida:
-
-- `GET /api/cozinha/pedidos`
-- `PATCH /api/cozinha/pedidos/:id/status`
-
-Pendente:
-
-- Depende da tabela `pedidos`, ausente no schema atual.
-- Ainda nao separa pedidos por estacao de preparo.
-
-### Caixa
-
-Arquivo: `src/components/Caixa/Caixa.jsx`
-
-- Busca caixa aberto.
-- Abre caixa.
-- Registra suprimento e sangria.
-- Lista movimentos.
-- Fecha caixa calculando saldo esperado e diferenca.
-- Usa `src/services/cashService.js`.
-
-API consumida:
+APIs consumidas:
 
 - `GET /api/caixa/aberto`
 - `POST /api/caixa/abrir`
 - `POST /api/caixa/movimento`
 - `GET /api/caixa/movimentos`
 - `POST /api/caixa/fechar`
+- `GET /api/cardapio`
+- `POST /api/pedidos`
 
-Pendente:
+### Pedidos
 
-- A tela nao esta acessivel por rota.
-- Depende de `caixas` e `caixa_movimentos`, ausentes no schema atual.
+Arquivo: `src/components/Pedidos/Pedidos.jsx`
 
-### PDV e composicao
+- lista pedidos registrados
+- muda status pelo select
 
-Arquivos:
+APIs consumidas:
 
-- `src/components/PDV/PDV.jsx`
-- `src/components/ProductCompositionEditor/ProductCompositionEditor.jsx`
+- `GET /api/pedidos`
+- `PATCH /api/pedidos/:id/status`
 
-Estado atual:
+### Cozinha
 
-- Sao placeholders simples, sem fluxo real implementado.
+Arquivo: `src/components/Cozinha/Cozinha.jsx`
+
+- lista pedidos pendentes
+- muda status para `em_preparo`, `pronto` e `entregue`
+- pedido entregue some da lista da cozinha
+
+APIs consumidas:
+
+- `GET /api/cozinha/pedidos`
+- `PATCH /api/cozinha/pedidos/:id/status`
 
 ## Services
 
-Services existentes:
+Services ativos:
 
 - `productService.js`
 - `stockService.js`
@@ -181,39 +182,22 @@ Services existentes:
 - `orderService.js`
 - `kitchenService.js`
 
-Todos repetem:
-
-- `const API_URL = 'http://localhost:3006/api'`
-- `getToken()`
-- `tratarResposta()`
-
-Pendente:
-
-- Centralizar isso em um arquivo unico. O arquivo
-  `src/components/config/api.js` existe, mas esta vazio.
+Eles ainda repetem `API_URL`, `getToken` e tratamento de resposta.
+Centralizar isso e uma pendencia tecnica, nao um bloqueio do MVP.
 
 ## Validacao executada
 
 Comandos executados em `frontend/`:
 
-- `npm run build`: passou.
-- `npm run lint`: falhou com 18 erros.
+- `npm run lint`: passou
+- `npm run build`: passou
 
-Erros principais do lint:
+Tambem foi feito screenshot Playwright da rota `/caixa` com a tela de PDV
+carregando.
 
-- `React` importado e nao usado em varios componentes.
-- `Caixa` importado em `App.jsx`, mas nao usado em rota.
-- `react-hooks/set-state-in-effect` em `Cardapio`, `Estoque`, `Pedidos`,
-  `Cozinha` e `Caixa`.
-- `error` nao usado no `catch` do login.
+## Pendencias
 
-## Proximos ajustes recomendados
-
-1. Registrar `/caixa` em `App.jsx`.
-2. Centralizar configuracao da API.
-3. Remover imports `React` desnecessarios ou ajustar regra de lint.
-4. Resolver a regra `react-hooks/set-state-in-effect` conforme o padrao do
-   projeto.
-5. Mostrar categoria nos formularios de produto.
-6. So validar telas de estoque, pedidos, cozinha e caixa em runtime depois que
-   o schema do backend tiver as tabelas necessarias.
+- Rodar teste manual completo no navegador para todos os fluxos.
+- Centralizar helper de API.
+- Criar testes automatizados de componentes ou smoke test E2E quando o fluxo
+  estabilizar.

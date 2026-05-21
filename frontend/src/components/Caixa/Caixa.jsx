@@ -19,6 +19,39 @@ const Caixa = () => {
   const [valorMovimento, setValorMovimento] = useState('');
   const [motivoMovimento, setMotivoMovimento] = useState('');
   const [movimentos, setMovimentos] = useState([]);
+  const [popup, setPopup] = useState(null);
+
+  const abrirPopup = ({
+    tipo = 'info',
+    titulo = 'Mensagem',
+    mensagens = [],
+    textoConfirmar = 'OK',
+    textoCancelar = '',
+    onConfirm = null,
+  }) => {
+    setPopup({
+      tipo,
+      titulo,
+      mensagens: Array.isArray(mensagens) ? mensagens : [mensagens],
+      textoConfirmar,
+      textoCancelar,
+      onConfirm,
+    });
+  };
+
+  const fecharPopup = () => {
+    setPopup(null);
+  };
+
+  const confirmarPopup = async () => {
+    const callback = popup?.onConfirm;
+    fecharPopup();
+
+    if (callback) {
+      await callback();
+    }
+  };
+
   const carregarMovimentos = async () => {
     try {
       const data = await listarMovimentosCaixa();
@@ -84,21 +117,22 @@ const Caixa = () => {
       await carregarCaixa();
       await carregarMovimentos();
 
-      alert('Caixa aberto com sucesso.');
+      abrirPopup({
+        tipo: 'sucesso',
+        titulo: 'Caixa aberto',
+        mensagens: 'Caixa aberto com sucesso.',
+      });
     } catch (error) {
       setErro(error.message);
+      abrirPopup({
+        tipo: 'erro',
+        titulo: 'Erro ao abrir caixa',
+        mensagens: error.message,
+      });
     }
   };
 
-  const handleFecharCaixa = async (event) => {
-    event.preventDefault();
-
-    const confirmar = window.confirm('Deseja fechar o caixa?');
-
-    if (!confirmar) {
-      return;
-    }
-
+  const executarFechamentoCaixa = async () => {
     try {
       await fecharCaixa({
         valor_final: Number(valorFinal || 0),
@@ -109,10 +143,32 @@ const Caixa = () => {
       setObservacao('');
       await carregarCaixa();
       await carregarMovimentos();
-      alert('Caixa fechado com sucesso.');
+      abrirPopup({
+        tipo: 'sucesso',
+        titulo: 'Caixa fechado',
+        mensagens: 'Caixa fechado com sucesso.',
+      });
     } catch (error) {
       setErro(error.message);
+      abrirPopup({
+        tipo: 'erro',
+        titulo: 'Erro ao fechar caixa',
+        mensagens: error.message,
+      });
     }
+  };
+
+  const handleFecharCaixa = async (event) => {
+    event.preventDefault();
+
+    abrirPopup({
+      tipo: 'confirmacao',
+      titulo: 'Fechar caixa',
+      mensagens: 'Deseja fechar o caixa?',
+      textoConfirmar: 'Fechar',
+      textoCancelar: 'Cancelar',
+      onConfirm: executarFechamentoCaixa,
+    });
   };
 
   const existeCaixaAberto = caixaAberto?.aberto;
@@ -120,7 +176,11 @@ const Caixa = () => {
     event.preventDefault();
 
     if (Number(valorMovimento || 0) <= 0) {
-      alert('Informe um valor maior que zero.');
+      abrirPopup({
+        tipo: 'erro',
+        titulo: 'Valor inválido',
+        mensagens: 'Informe um valor maior que zero.',
+      });
       return;
     }
 
@@ -137,13 +197,26 @@ const Caixa = () => {
       await carregarCaixa();
       await carregarMovimentos();
 
-      alert('Movimentação registrada com sucesso.');
+      abrirPopup({
+        tipo: 'sucesso',
+        titulo: 'Movimentação registrada',
+        mensagens: 'Movimentação registrada com sucesso.',
+      });
     } catch (error) {
       setErro(error.message);
+      abrirPopup({
+        tipo: 'erro',
+        titulo: 'Erro na movimentação',
+        mensagens: error.message,
+      });
     }
   };
   const totalSuprimentos = movimentos
     .filter((movimento) => movimento.tipo === 'suprimento')
+    .reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
+
+  const totalVendas = movimentos
+    .filter((movimento) => movimento.tipo === 'venda')
     .reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
 
   const totalSangrias = movimentos
@@ -154,7 +227,8 @@ const Caixa = () => {
     ? Number(caixaAberto.caixa.valor_inicial || 0)
     : 0;
 
-  const saldoEsperado = valorInicialCaixa + totalSuprimentos - totalSangrias;
+  const saldoEsperado =
+    valorInicialCaixa + totalVendas + totalSuprimentos - totalSangrias;
   const diferencaFechamento =
     valorFinal !== '' ? Number(valorFinal || 0) - saldoEsperado : 0;
   return (
@@ -201,6 +275,11 @@ const Caixa = () => {
             <div className="caixaResumoCard">
               <span>Valor inicial</span>
               <strong>R$ {valorInicialCaixa.toFixed(2)}</strong>
+            </div>
+
+            <div className="caixaResumoCard">
+              <span>Vendas</span>
+              <strong>R$ {totalVendas.toFixed(2)}</strong>
             </div>
 
             <div className="caixaResumoCard">
@@ -279,6 +358,7 @@ const Caixa = () => {
                   <th>ID</th>
                   <th>Tipo</th>
                   <th>Valor</th>
+                  <th>Pagamento</th>
                   <th>Motivo</th>
                   <th>Data</th>
                 </tr>
@@ -290,6 +370,7 @@ const Caixa = () => {
                     <td>{movimento.id}</td>
                     <td>{movimento.tipo}</td>
                     <td>R$ {movimento.valor}</td>
+                    <td>{movimento.forma_pagamento || '-'}</td>
                     <td>{movimento.motivo}</td>
                     <td>
                       {new Date(movimento.criado_em).toLocaleString('pt-BR')}
@@ -377,6 +458,40 @@ const Caixa = () => {
             </button>
           </form>
         </section>
+      )}
+
+      {popup && (
+        <div className="appPopupOverlay" role="dialog" aria-modal="true">
+          <div className={`appPopup appPopup-${popup.tipo}`}>
+            <h3>{popup.titulo}</h3>
+
+            <div className="appPopupMessages">
+              {popup.mensagens.map((mensagem, index) => (
+                <p key={`${popup.titulo}-${index}`}>{mensagem}</p>
+              ))}
+            </div>
+
+            <div className="appPopupActions">
+              {popup.textoCancelar && (
+                <button
+                  type="button"
+                  className="appPopupCancel"
+                  onClick={fecharPopup}
+                >
+                  {popup.textoCancelar}
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="appPopupConfirm"
+                onClick={confirmarPopup}
+              >
+                {popup.textoConfirmar}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

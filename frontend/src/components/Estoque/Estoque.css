@@ -56,7 +56,8 @@
   text-transform: uppercase;
 }
 
-.estoqueTable input {
+.estoqueTable input,
+.estoqueTable select {
   width: 100px;
   padding: 8px;
   border: 1px solid var(--border);
@@ -78,7 +79,8 @@
   background-color: var(--brand-dark);
 }
 .btnEntradaEstoque,
-.btnSaidaEstoque {
+.btnSaidaEstoque,
+.btnAjusteEstoque {
   border: none;
   border-radius: 8px;
   padding: 8px 12px;
@@ -104,6 +106,15 @@
 
 .btnSaidaEstoque:hover {
   background-color: #941b27;
+}
+
+.btnAjusteEstoque {
+  background-color: var(--brand);
+  color: #fff;
+}
+
+.btnAjusteEstoque:hover {
+  background-color: var(--brand-dark);
 }
 .historicoSection {
   margin-top: 24px;

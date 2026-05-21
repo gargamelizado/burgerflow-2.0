@@ -1,40 +1,99 @@
 .dashboardPage {
   width: 100%;
+  display: grid;
+  gap: 22px;
 }
 
 .dashboardHeader {
-  margin-bottom: 24px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
 }
 
 .dashboardHeader h1 {
   color: var(--text-main);
-  font-size: clamp(28px, 3vw, 40px);
-  margin-bottom: 10px;
+  font-size: 32px;
+  line-height: 1.15;
 }
 
 .dashboardHeader p {
   color: var(--text-muted);
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 1.45;
 }
 
-.cardsContainer {
+.dashboardEyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(35, 100, 170, 0.1);
+  color: var(--info);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.dashboardRefresh {
+  min-height: 42px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.dashboardRefresh:hover:not(:disabled) {
+  background: var(--brand-dark);
+  box-shadow: 0 10px 22px rgba(214, 40, 40, 0.18);
+  transform: translateY(-1px);
+}
+
+.dashboardRefresh:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.dashboardError {
+  padding: 12px 14px;
+  border: 1px solid rgba(180, 35, 48, 0.18);
+  border-left: 4px solid var(--danger);
+  border-radius: 8px;
+  background: #fff7f7;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.dashboardCards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 14px;
 }
 
-.card {
+.dashboardCard {
   position: relative;
-  min-height: 150px;
+  min-height: 142px;
   overflow: hidden;
-  background: var(--surface);
-  padding: 25px;
+  display: grid;
+  align-content: space-between;
+  gap: 12px;
+  padding: 18px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 12px 28px rgba(32, 36, 44, 0.07);
 }
 
-.card::before {
+.dashboardCard::before {
   content: '';
   position: absolute;
   inset: 0 0 auto;
@@ -42,27 +101,233 @@
   background: var(--brand);
 }
 
-.cardVendas::before {
+.dashboardCard span,
+.dashboardCard small {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashboardCard strong {
+  color: var(--text-main);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.dashboardCardPedidos::before {
+  background: var(--brand);
+}
+
+.dashboardCardVendas::before {
   background: var(--success);
 }
 
-.cardItens::before {
+.dashboardCardItens::before {
+  background: var(--info);
+}
+
+.dashboardCardEstoque::before {
   background: var(--warning);
 }
 
-.card h3 {
-  font-size: 16px;
-  color: var(--text-muted);
-  margin-bottom: 15px;
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 14px;
 }
 
-.card strong {
-  font-size: 30px;
+.dashboardPanel {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 12px 28px rgba(32, 36, 44, 0.07);
+}
+
+.dashboardPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.dashboardPanelHeader h2 {
   color: var(--text-main);
+  font-size: 18px;
+  line-height: 1.2;
 }
 
-@media (max-width: 900px) {
-  .cardsContainer {
+.dashboardPanelHeader p {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dashboardStatus {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.statusAberto {
+  background: rgba(22, 131, 90, 0.12);
+  color: var(--success);
+}
+
+.statusFechado {
+  background: rgba(180, 35, 48, 0.1);
+  color: var(--danger);
+}
+
+.dashboardMoneyGrid,
+.dashboardStatusGrid,
+.dashboardTypeList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.dashboardMoneyGrid div,
+.dashboardStatusGrid span,
+.dashboardTypeList span {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashboardMoneyGrid strong,
+.dashboardStatusGrid strong,
+.dashboardTypeList strong {
+  color: var(--text-main);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.dashboardNegativeList {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboardNegativeList div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(180, 35, 48, 0.16);
+  border-radius: 8px;
+  background: #fff7f7;
+}
+
+.dashboardNegativeList span {
+  min-width: 0;
+  color: var(--text-main);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.dashboardNegativeList strong {
+  color: var(--danger);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.dashboardEmptyState {
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.dashboardRecentPanel {
+  overflow: hidden;
+}
+
+.dashboardRecentList {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboardRecentItem {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.dashboardRecentItem div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.dashboardRecentItem strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.dashboardRecentItem span {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashboardRecentStatus {
+  min-height: 28px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(35, 100, 170, 0.1);
+  color: var(--info) !important;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .dashboardCards {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboardHeader,
+  .dashboardPanelHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboardRefresh {
+    width: 100%;
+  }
+
+  .dashboardCards,
+  .dashboardGrid,
+  .dashboardMoneyGrid,
+  .dashboardStatusGrid,
+  .dashboardTypeList,
+  .dashboardRecentItem {
     grid-template-columns: 1fr;
+  }
+
+  .dashboardRecentStatus {
+    justify-self: start;
   }
 }

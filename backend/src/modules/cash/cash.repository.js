@@ -1,7 +1,9 @@
 const db = require('../../config/db');
 
-const findOpen = async () => {
-  const [rows] = await db.query(`
+const executor = (connection) => connection || db;
+
+const findOpen = async (connection) => {
+  const [rows] = await executor(connection).query(`
     SELECT
       id,
       usuario_id,
@@ -22,8 +24,8 @@ const findOpen = async () => {
   return rows[0];
 };
 
-const findById = async (id) => {
-  const [rows] = await db.query(
+const findById = async (id, connection) => {
+  const [rows] = await executor(connection).query(
     `
     SELECT
       id,
@@ -45,8 +47,8 @@ const findById = async (id) => {
   return rows[0];
 };
 
-const open = async ({ usuario_id, valor_inicial, observacao }) => {
-  const [result] = await db.query(
+const open = async ({ usuario_id, valor_inicial, observacao }, connection) => {
+  const [result] = await executor(connection).query(
     `
     INSERT INTO caixas (
       usuario_id,
@@ -58,11 +60,11 @@ const open = async ({ usuario_id, valor_inicial, observacao }) => {
     [usuario_id, valor_inicial, observacao]
   );
 
-  return findById(result.insertId);
+  return findById(result.insertId, connection);
 };
 
-const close = async ({ id, valor_final, valor_esperado, diferenca, observacao }) => {
-  await db.query(
+const close = async ({ id, valor_final, valor_esperado, diferenca, observacao }, connection) => {
+  await executor(connection).query(
     `
     UPDATE caixas
     SET
@@ -77,11 +79,11 @@ const close = async ({ id, valor_final, valor_esperado, diferenca, observacao })
     [valor_final, valor_esperado, diferenca, observacao, id]
   );
 
-  return findById(id);
+  return findById(id, connection);
 };
 
-const createMovement = async ({ caixa_id, tipo, valor, motivo }) => {
-  const [result] = await db.query(
+const createMovement = async ({ caixa_id, tipo, valor, motivo }, connection) => {
+  const [result] = await executor(connection).query(
     `
     INSERT INTO caixa_movimentos (
       caixa_id,
@@ -96,14 +98,16 @@ const createMovement = async ({ caixa_id, tipo, valor, motivo }) => {
   return result;
 };
 
-const listMovementsByCash = async (caixa_id) => {
-  const [rows] = await db.query(
+const listMovementsByCash = async (caixa_id, connection) => {
+  const [rows] = await executor(connection).query(
     `
     SELECT
       id,
       caixa_id,
       tipo,
       valor,
+      forma_pagamento,
+      status_pagamento,
       motivo,
       criado_em
     FROM caixa_movimentos

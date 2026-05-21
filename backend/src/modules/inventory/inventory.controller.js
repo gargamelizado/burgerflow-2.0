@@ -1,5 +1,11 @@
 const inventoryService = require('./inventory.service');
 
+const list = async (req, res) => {
+  const resultado = await inventoryService.list();
+
+  return res.json(resultado);
+};
+
 const movimentar = async (req, res) => {
   const resultado = await inventoryService.movimentar(req.body);
 
@@ -13,6 +19,7 @@ const historico = async (req, res) => {
 };
 
 module.exports = {
+  list,
   movimentar,
   historico,
 };

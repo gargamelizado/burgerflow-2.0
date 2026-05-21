@@ -46,3 +46,85 @@ select:focus-visible {
   outline: 3px solid rgba(214, 40, 40, 0.24);
   outline-offset: 2px;
 }
+
+.appPopupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(20, 20, 25, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.appPopup {
+  width: min(460px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 6px solid var(--info);
+  border-radius: 10px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  padding: 22px;
+}
+
+.appPopup-sucesso {
+  border-top-color: var(--success);
+}
+
+.appPopup-aviso,
+.appPopup-confirmacao {
+  border-top-color: var(--warning);
+}
+
+.appPopup-erro {
+  border-top-color: var(--danger);
+}
+
+.appPopup h3 {
+  color: var(--text-main);
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.appPopupMessages {
+  display: grid;
+  gap: 8px;
+  color: var(--text-main);
+  line-height: 1.45;
+}
+
+.appPopupActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.appPopupActions button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.appPopupCancel {
+  background: #eef0f3;
+  color: var(--text-main);
+}
+
+.appPopupConfirm {
+  background: var(--brand);
+  color: #fff;
+}
+
+.appPopup-sucesso .appPopupConfirm {
+  background: var(--success);
+}
+
+.appPopup-aviso .appPopupConfirm,
+.appPopup-confirmacao .appPopupConfirm {
+  background: var(--warning);
+  color: var(--text-main);
+}
