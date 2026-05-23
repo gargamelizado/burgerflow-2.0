@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { API_URL } from '../../config/api';
 import './Login.css';
 import Logo from '../../imgs/Burger Flow.png';
 export default function Login({ onLogin }) {
@@ -21,7 +22,7 @@ export default function Login({ onLogin }) {
     }
 
     try {
-      const response = await fetch('http://localhost:3006/api/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,8 +47,9 @@ export default function Login({ onLogin }) {
       setError('');
       onLogin();
       navigate('/dashboard');
-    } catch {
-      setError('Erro ao conectar com o servidor');
+    } catch (error) {
+      console.error('Login fetch error:', error);
+      setError('Erro ao conectar com o servidor. Verifique se a API está rodando.');
     }
   };
   return (

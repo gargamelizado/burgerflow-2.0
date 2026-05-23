@@ -221,6 +221,31 @@ const findStockByIngredientId = async (ingredienteId, connection) => {
   return rows[0] || null;
 };
 
+const findStockByIngredientIdForUpdate = async (ingredienteId, connection) => {
+  const [rows] = await executor(connection).query(
+    `
+    SELECT
+      e.id,
+      e.ingrediente_id,
+      i.nome AS ingrediente_nome,
+      e.tipo_entrada,
+      e.quantidade_entrada,
+      e.pacotes_por_caixa,
+      e.quantidade_por_pacote,
+      e.unidade_medida,
+      e.quantidade_total_base,
+      e.unidade_base
+    FROM estoque_ingredientes e
+    INNER JOIN itens i ON i.id = e.ingrediente_id
+    WHERE e.ingrediente_id = ?
+    FOR UPDATE
+    `,
+    [ingredienteId]
+  );
+
+  return rows[0] || null;
+};
+
 const updateStockQuantity = async (
   ingredienteId,
   quantidadeTotalBase,
@@ -452,6 +477,7 @@ module.exports = {
   deactivate,
   upsertStock,
   findStockByIngredientId,
+  findStockByIngredientIdForUpdate,
   updateStockQuantity,
   createStockMovement,
   replaceProductIngredients,

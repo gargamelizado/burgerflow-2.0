@@ -3,7 +3,7 @@ const orderRepository = require('./order.repository');
 const productRepository = require('../products/product.repository');
 const {
   resolverIngredientesDoItem,
-  verificarEstoqueNegativo,
+  verificarEstoqueSuficiente,
   baixarEstoque,
   mergeIngredientes,
 } = require('./orderStock.service');
@@ -53,7 +53,9 @@ const normalizeOrderItems = async (itens = [], connection) => {
   const ingredientes = [];
 
   for (const itemPedido of itens) {
-    const itemId = Number(itemPedido.item_id || itemPedido.id);
+    const itemId = Number(
+      itemPedido.item_id || itemPedido.produto_id || itemPedido.id
+    );
     const quantidade = toNumber(itemPedido.quantidade);
 
     if (!itemId || quantidade <= 0) {
@@ -114,21 +116,31 @@ const create = async (data) => {
   try {
     await connection.beginTransaction();
 
-    const normalized = await normalizeOrderItems(data.itens, connection);
-    const estoqueNegativo = await verificarEstoqueNegativo(
-      normalized.ingredientes,
-      connection
-    );
-
-    const caixa = data.caixa_id
-      ? { id: Number(data.caixa_id) }
-      : await orderRepository.findOpenCash(connection);
-
-    if (!caixa) {
-      const error = new Error('Abra o caixa antes de finalizar a venda.');
+    const caixaId = Number(data.caixa_id);
+    if (!Number.isInteger(caixaId) || caixaId <= 0) {
+      const error = new Error('caixa_id é obrigatório.');
       error.statusCode = 400;
       throw error;
     }
+
+    const caixa = await orderRepository.findCashById(caixaId, connection);
+    if (!caixa) {
+      const error = new Error('Caixa não encontrado.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (String(caixa.status || '').toLowerCase() !== 'aberto') {
+      const error = new Error('Caixa fechado. Não é possível vender.');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const normalized = await normalizeOrderItems(data.itens, connection);
+    const estoqueMap = await verificarEstoqueSuficiente(
+      normalized.ingredientes,
+      connection
+    );
 
     const numero = await orderRepository.getNextNumber(connection);
     const total = normalized.itens.reduce(
@@ -144,6 +156,7 @@ const create = async (data) => {
       {
         numero,
         caixa_id: caixa.id,
+        usuario_id: data.usuario_id || null,
         cliente_nome: data.cliente_nome || 'Cliente',
         tipo: data.tipo || 'balcao',
         total,
@@ -156,12 +169,18 @@ const create = async (data) => {
     );
 
     await orderRepository.createItems(pedidoId, normalized.itens, connection);
-    await baixarEstoque(normalized.ingredientes, pedidoId, connection);
+    await baixarEstoque(
+      normalized.ingredientes,
+      pedidoId,
+      connection,
+      estoqueMap
+    );
 
     await orderRepository.createCashSaleMovement(
       {
-        caixa_id: caixa.id,
+        caixa_id: caixaId,
         pedido_id: pedidoId,
+        usuario_id: data.usuario_id || null,
         valor: total,
         forma_pagamento: data.forma_pagamento || 'dinheiro',
         status_pagamento: data.status_pagamento || 'pago',
@@ -169,6 +188,7 @@ const create = async (data) => {
       },
       connection
     );
+    await orderRepository.incrementCashTotalSales(caixaId, total, connection);
 
     await connection.commit();
 
@@ -179,7 +199,7 @@ const create = async (data) => {
       pedido,
       itens: normalized.itens,
       ingredientes_baixados: normalized.ingredientes,
-      avisos_estoque: estoqueNegativo.avisos,
+      avisos_estoque: [],
     };
   } catch (error) {
     await connection.rollback();

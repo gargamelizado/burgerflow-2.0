@@ -1,91 +1,165 @@
-const API_URL = 'http://localhost:3006/api';
+import { API_URL, getToken, fetchJson } from '../config/api';
 
-const getToken = () => {
-  return localStorage.getItem('token');
-};
+const buildHeaders = (gerencialToken = null) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${getToken()}`,
+  };
 
-const tratarResposta = async (response) => {
-  const contentType = response.headers.get('content-type');
-
-  if (!contentType || !contentType.includes('application/json')) {
-    const text = await response.text();
-    console.error('Resposta não JSON recebida:', text);
-    throw new Error('A API retornou HTML em vez de JSON.');
+  if (gerencialToken) {
+    headers['x-gerencial-token'] = gerencialToken;
   }
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Erro na requisição.');
-  }
-
-  return data;
+  return headers;
 };
 
 export const buscarCaixaAberto = async () => {
-  const response = await fetch(`${API_URL}/caixa/aberto`, {
+  return fetchJson(`${API_URL}/caixa/aberto`, {
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },
   });
-
-  return tratarResposta(response);
 };
 
-export const abrirCaixa = async ({ valor_inicial, observacao }) => {
-  const response = await fetch(`${API_URL}/caixa/abrir`, {
+export const abrirCaixa = async ({
+  numero,
+  operador_id,
+  valor_inicial,
+  observacao,
+  gerencial_token = null,
+  motivo_autorizacao = '',
+}) => {
+  const payload = {
+    numero,
+    operador_id,
+    valor_inicial,
+    observacao,
+    motivo_autorizacao,
+  };
+
+  return fetchJson(`${API_URL}/caixas/abrir`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify({
-      valor_inicial,
-      observacao,
-    }),
+    headers: buildHeaders(gerencial_token),
+    body: JSON.stringify(payload),
   });
-
-  return tratarResposta(response);
 };
 
-export const fecharCaixa = async ({ valor_final, observacao }) => {
-  const response = await fetch(`${API_URL}/caixa/fechar`, {
+export const fecharCaixa = async ({
+  caixa_id,
+  valor_final,
+  observacao,
+  gerencial_token = null,
+  motivo_autorizacao = '',
+}) => {
+  const endpoint = caixa_id
+    ? `${API_URL}/caixas/${caixa_id}/fechar`
+    : `${API_URL}/caixa/fechar`;
+
+  return fetchJson(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
-    },
+    headers: buildHeaders(gerencial_token),
     body: JSON.stringify({
       valor_final,
       observacao,
+      motivo_autorizacao,
     }),
   });
-
-  return tratarResposta(response);
 };
-export const registrarMovimentoCaixa = async ({ tipo, valor, motivo }) => {
-  const response = await fetch(`${API_URL}/caixa/movimento`, {
+
+export const registrarMovimentoCaixa = async ({
+  caixa_id,
+  tipo,
+  valor,
+  motivo,
+  gerencial_token = null,
+  motivo_autorizacao = '',
+}) => {
+  return fetchJson(`${API_URL}/caixa/movimento`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
-    },
+    headers: buildHeaders(gerencial_token),
     body: JSON.stringify({
+      caixa_id,
       tipo,
       valor,
       motivo,
+      motivo_autorizacao,
     }),
   });
-
-  return tratarResposta(response);
 };
 
-export const listarMovimentosCaixa = async () => {
-  const response = await fetch(`${API_URL}/caixa/movimentos`, {
+export const listarMovimentosCaixa = async (caixa_id = null) => {
+  const query = caixa_id ? `?caixa_id=${encodeURIComponent(caixa_id)}` : '';
+  return fetchJson(`${API_URL}/caixa/movimentos${query}`, {
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },
   });
+};
 
-  return tratarResposta(response);
+export const listarCaixasAbertos = async () => {
+  return fetchJson(`${API_URL}/caixas/abertos`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+};
+
+export const buscarCaixaPorId = async (caixaId) => {
+  return fetchJson(`${API_URL}/caixas/${caixaId}`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+};
+
+export const listarVendasPorCaixa = async (caixaId) => {
+  return fetchJson(`${API_URL}/caixas/${caixaId}/vendas`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+};
+
+export const abrirCaixasTeste = async (quantidade) => {
+  return fetchJson(`${API_URL}/teste/abrir-caixas`, {
+    method: 'POST',
+    headers: buildHeaders(),
+    body: JSON.stringify({
+      quantidade,
+    }),
+  });
+};
+
+export const venderEmCaixasTeste = async (vendas) => {
+  return fetchJson(`${API_URL}/teste/vender-em-caixas`, {
+    method: 'POST',
+    headers: buildHeaders(),
+    body: JSON.stringify({
+      vendas,
+    }),
+  });
+};
+
+export const autorizarAcaoGerencial = async ({
+  acao,
+  identificador,
+  senha,
+  motivo,
+  entidade = 'caixa',
+  registro_id = null,
+  valor = null,
+}) => {
+  return fetchJson(`${API_URL}/gerencial/autorizar`, {
+    method: 'POST',
+    headers: buildHeaders(),
+    body: JSON.stringify({
+      acao,
+      identificador,
+      senha,
+      motivo,
+      entidade,
+      registro_id,
+      valor,
+    }),
+  });
 };

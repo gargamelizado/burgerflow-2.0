@@ -7,7 +7,11 @@ const list = async (req, res) => {
 };
 
 const create = async (req, res) => {
-  const pedido = await orderService.create(req.body);
+  const pedido = await orderService.create({
+    ...req.body,
+    usuario_id: req.user?.id || null,
+    usuario_nivel_acesso: req.user?.nivel_acesso || null,
+  });
 
   return res.status(201).json(pedido);
 };

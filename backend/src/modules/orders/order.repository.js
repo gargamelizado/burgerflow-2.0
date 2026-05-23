@@ -8,6 +8,7 @@ const list = async () => {
       p.id,
       p.numero,
       p.caixa_id,
+      p.usuario_id,
       p.cliente_nome,
       p.tipo,
       p.status,
@@ -69,6 +70,7 @@ const findById = async (id, connection) => {
       id,
       numero,
       caixa_id,
+      usuario_id,
       cliente_nome,
       tipo,
       status,
@@ -94,6 +96,7 @@ const create = async (pedido, connection) => {
     INSERT INTO pedidos (
       numero,
       caixa_id,
+      usuario_id,
       cliente_nome,
       tipo,
       status,
@@ -102,11 +105,12 @@ const create = async (pedido, connection) => {
       forma_pagamento,
       status_pagamento,
       observacao
-    ) VALUES (?, ?, ?, ?, 'novo', ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, 'novo', ?, ?, ?, ?, ?)
     `,
     [
       pedido.numero,
       pedido.caixa_id || null,
+      pedido.usuario_id || null,
       pedido.cliente_nome,
       pedido.tipo,
       pedido.total,
@@ -183,27 +187,62 @@ const findOpenCash = async (connection) => {
   return rows[0] || null;
 };
 
+const findCashById = async (caixaId, connection) => {
+  const [rows] = await executor(connection).query(
+    `
+    SELECT
+      id,
+      numero,
+      usuario_id,
+      operador_id,
+      status,
+      valor_inicial,
+      valor_total_vendas
+    FROM caixas
+    WHERE id = ?
+    LIMIT 1
+    `,
+    [caixaId]
+  );
+
+  return rows[0] || null;
+};
+
 const createCashSaleMovement = async (movimento, connection) => {
   await executor(connection).query(
     `
     INSERT INTO caixa_movimentos (
       caixa_id,
       pedido_id,
+      usuario_id,
       tipo,
       valor,
       forma_pagamento,
       status_pagamento,
       motivo
-    ) VALUES (?, ?, 'venda', ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, 'venda', ?, ?, ?, ?)
     `,
     [
       movimento.caixa_id,
       movimento.pedido_id,
+      movimento.usuario_id || null,
       movimento.valor,
       movimento.forma_pagamento,
       movimento.status_pagamento,
       movimento.motivo,
     ]
+  );
+};
+
+const incrementCashTotalSales = async (caixaId, valor, connection) => {
+  await executor(connection).query(
+    `
+    UPDATE caixas
+    SET valor_total_vendas = COALESCE(valor_total_vendas, 0) + ?,
+        atualizado_em = CURRENT_TIMESTAMP
+    WHERE id = ?
+    `,
+    [valor, caixaId]
   );
 };
 
@@ -236,6 +275,8 @@ module.exports = {
   createItems,
   updateStatus,
   findOpenCash,
+  findCashById,
   createCashSaleMovement,
+  incrementCashTotalSales,
   logAudit,
 };

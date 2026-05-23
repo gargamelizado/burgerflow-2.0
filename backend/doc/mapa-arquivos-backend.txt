@@ -6,6 +6,7 @@ backend/src/server.js
 
 backend/src/config/db.js
 backend/src/config/env.js
+backend/src/config/businessRules.js
 
 backend/src/middlewares/auth.middleware.js
 backend/src/middlewares/error.middleware.js
@@ -46,6 +47,11 @@ backend/src/modules/reports/report.controller.js
 backend/src/modules/reports/report.service.js
 backend/src/modules/reports/report.repository.js
 
+backend/src/modules/management/management.routes.js
+backend/src/modules/management/management.controller.js
+backend/src/modules/management/management.service.js
+backend/src/modules/management/management.repository.js
+
 backend/src/modules/cash/cash.routes.js
 backend/src/modules/cash/cash.controller.js
 backend/src/modules/cash/cash.service.js
@@ -56,12 +62,16 @@ backend/src/modules/kitchen/kitchen.controller.js
 backend/src/modules/kitchen/kitchen.service.js
 backend/src/modules/kitchen/kitchen.repository.js
 
+backend/src/repositories/audit.repository.js
+
 backend/src/routes/product.routes.js
 
 databases/schema.sql
 databases/seed.sql
 databases/migration_cardapio_estoque_basico.sql
+databases/migration_funcao_gerencial_caixa.sql
 
 Observacao:
 backend exemplo/ e referencia antiga. Este mapa aponta para o backend ativo.
-As melhorias recentes incluem modulos de usuarios e relatorios gerenciais.
+As melhorias recentes incluem autorizacao gerencial temporaria de caixa,
+auditoria centralizada e migracao incremental da funcao gerencial.

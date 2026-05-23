@@ -78,6 +78,7 @@ Usuarios
 - DELETE /api/usuarios/:id
 
 Relatorios Gerenciais
+- POST /api/gerencial/autorizar
 - GET /api/gerencial/relatorios/produtos-vendidos
 
 Observacoes
@@ -86,5 +87,8 @@ Observacoes
 - Venda pelo PDV usa POST /api/pedidos.
 - Estoque negativo e permitido no fluxo de venda.
 - Fechamento de caixa usa calculo oficial no backend e retorna diferenca.
+- Valor esperado de caixa usa apenas dinheiro fisico
+  (`valor_inicial + vendas_dinheiro + suprimentos - sangrias - despesas`).
+- Acoes sensiveis de caixa aceitam override temporario por `x-gerencial-token`.
 - Cozinha lista pedidos ativos com itens e suporta fluxo de status ate entregue.
 - Rotas de usuarios e relatorios gerenciais exigem permissao por nivel de acesso.

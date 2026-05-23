@@ -173,6 +173,53 @@ Evidencia executada em 2026-05-19:
 - Pedido foi alterado para `cancelado` na tela Pedidos.
 - Caixa foi fechado pela tela com sucesso.
 
+## Testes automatizados — Funcao Gerencial (2026-05-23)
+
+Script criado:
+
+- `backend/tests/gerencial-function-tests.mjs`
+
+Relatorio gerado:
+
+- `backend/test-results/gerencial-function-report.json`
+
+Resumo da execucao:
+
+- Total: 36
+- PASS: 36
+- FAIL: 0
+- SKIP: 0
+
+Principais pontos validados (PASS):
+
+- abertura de caixa por gerente/admin
+- abertura de caixa por vendedor com autorizacao gerencial temporaria
+- bloqueio de abertura duplicada
+- bloqueio de valor inicial negativo
+- suprimento e sangria com caixa aberto, valor valido e motivo obrigatorio
+- bloqueio de valor invalido em movimentacao
+- bloqueio de sangria acima do esperado sem autorizacao gerencial
+- fechamento com diferenca exige observacao
+- fechamento por vendedor exige autorizacao gerencial
+- Pix e cartao nao entram no dinheiro fisico esperado
+- bloqueio de venda com caixa fechado
+- venda permitida com caixa aberto via `POST /api/pedidos`
+- fluxo principal mantido: pedido aparece na cozinha e cria movimento `venda`
+- erros de API retornando JSON
+- fechamento de caixa com calculo oficial no backend
+- auditoria de acoes gerenciais (`caixa.aberto`, `caixa.fechado`,
+  `caixa.suprimento`, `caixa.sangria`, `caixa.autorizacao_gerencial`,
+  `caixa.fechamento_com_diferenca`)
+
+Checklist manual sugerido para frontend (Caixa):
+
+- [ ] login como vendedor e tentar abrir caixa (deve pedir autorizacao gerencial)
+- [ ] login como vendedor e tentar fechar caixa (deve pedir autorizacao gerencial)
+- [ ] tentar suprimento sem motivo (deve bloquear com mensagem clara)
+- [ ] tentar sangria sem motivo (deve bloquear com mensagem clara)
+- [ ] tentar fechar com diferenca sem observacao (deve bloquear)
+- [ ] validar previa de diferenca visual vs calculo oficial retornado pelo backend
+
 ## Comandos uteis
 
 Backend:
@@ -199,6 +246,7 @@ Banco:
 mysql -uroot -p123456789 < databases/schema.sql
 mysql -uroot -p123456789 < databases/seed.sql
 mysql -uroot -p123456789 < databases/migration_cardapio_estoque_basico.sql
+mysql -uroot -p123456789 < databases/migration_funcao_gerencial_caixa.sql
 ```
 
 Checar mensagens nativas no frontend:

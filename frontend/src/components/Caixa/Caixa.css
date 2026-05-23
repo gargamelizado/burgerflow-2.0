@@ -234,6 +234,27 @@
   text-transform: uppercase;
 }
 
+.caixaAuthForm {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.caixaAuthForm input {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  font-size: 15px;
+  outline: none;
+}
+
+.caixaAuthForm input:focus {
+  background: var(--surface);
+  border-color: var(--brand);
+}
+
 .movimentoTipo {
   text-transform: capitalize;
   font-weight: 700;
