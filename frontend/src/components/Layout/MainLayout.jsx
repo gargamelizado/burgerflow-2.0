@@ -10,18 +10,33 @@ import estoque from '../../assets/icon/inventory.png';
 import loginOut from '../../assets/icon/login_24dp.png';
 import menu from '../../assets/icon/menu_24dp.png';
 import pagamento from '../../assets/icon/payments.png';
-
-const menuItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: home },
-  { to: '/pedidos', label: 'Pedidos', icon: menu },
-  { to: '/cardapio', label: 'Cardápio', icon: menu },
-  { to: '/estoque', label: 'Estoque', icon: estoque },
-  { to: '/caixa', label: 'Caixa', icon: pagamento },
-  { to: '/cozinha', label: 'Cozinha', icon: cozinha },
-];
+import ordersIcon from '../../assets/icon/orders.svg';
+import cardapioIcon from '../../assets/icon/menu-board.svg';
+import gerencialIcon from '../../assets/icon/manager-shield.svg';
 
 const MainLayout = ({ children, onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const usuario = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('usuario') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+  const podeVerGerencial = ['admin', 'gerente'].includes(
+    String(usuario?.nivel_acesso || '').toLowerCase()
+  );
+  const menuItems = [
+    { to: '/dashboard', label: 'Dashboard', icon: home },
+    { to: '/pedidos', label: 'Pedidos', icon: ordersIcon },
+    { to: '/cardapio', label: 'Cardápio', icon: cardapioIcon },
+    { to: '/estoque', label: 'Estoque', icon: estoque },
+    { to: '/caixa', label: 'Caixa', icon: pagamento },
+    { to: '/cozinha', label: 'Cozinha', icon: cozinha },
+    ...(podeVerGerencial
+      ? [{ to: '/gerencial', label: 'Gerencial', icon: gerencialIcon }]
+      : []),
+  ];
 
   const toggleSidebar = () => {
     setIsCollapsed((current) => !current);

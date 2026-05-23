@@ -6,6 +6,7 @@ import {
   editarItem,
   desativarItem,
 } from '../../services/productService';
+import ProductCompositionEditor from '../ProductCompositionEditor/ProductCompositionEditor';
 import './Cardapio.css';
 
 const categorias = [
@@ -108,6 +109,13 @@ const formatarTipo = (tipo) => {
   return tipo;
 };
 
+const normalizarTexto = (valor) =>
+  String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
 const getTipoClasse = (tipo) => {
   return `tipoBadge tipoBadge-${String(tipo || '').toLowerCase()}`;
 };
@@ -117,6 +125,14 @@ const Cardapio = () => {
   const [erro, setErro] = useState('');
   const [editandoId, setEditandoId] = useState(null);
   const [form, setForm] = useState(criarFormInicial);
+  const [modalEdicaoAberto, setModalEdicaoAberto] = useState(false);
+  const [filtros, setFiltros] = useState({
+    busca: '',
+    tipo: 'todos',
+    categoria: 'todos',
+    status: 'todos',
+    cardapio: 'todos',
+  });
   const [popup, setPopup] = useState(null);
 
   const abrirPopup = ({
@@ -187,6 +203,36 @@ const Cardapio = () => {
     [itens]
   );
 
+  const itensFiltrados = useMemo(() => {
+    const busca = normalizarTexto(filtros.busca);
+
+    return itens.filter((item) => {
+      const textoItem = normalizarTexto(
+        [item.id, item.nome, item.tipo, item.categoria].join(' ')
+      );
+      const bateBusca = !busca || textoItem.includes(busca);
+      const bateTipo = filtros.tipo === 'todos' || item.tipo === filtros.tipo;
+      const bateCategoria =
+        filtros.categoria === 'todos' || item.categoria === filtros.categoria;
+      const bateStatus =
+        filtros.status === 'todos' ||
+        (filtros.status === 'ativo' && item.ativo) ||
+        (filtros.status === 'inativo' && !item.ativo);
+      const bateCardapio =
+        filtros.cardapio === 'todos' ||
+        (filtros.cardapio === 'sim' && item.aparece_cardapio) ||
+        (filtros.cardapio === 'nao' && !item.aparece_cardapio);
+
+      return (
+        bateBusca &&
+        bateTipo &&
+        bateCategoria &&
+        bateStatus &&
+        bateCardapio
+      );
+    });
+  }, [itens, filtros]);
+
   const carregarItens = async () => {
     try {
       const data = await listarItens();
@@ -221,6 +267,7 @@ const Cardapio = () => {
   const limparFormulario = () => {
     setForm(criarFormInicial());
     setEditandoId(null);
+    setModalEdicaoAberto(false);
   };
 
   const handleChange = (event) => {
@@ -243,6 +290,25 @@ const Cardapio = () => {
       ativo: current.ativo,
       aparece_cardapio: tipo !== 'INGREDIENTE',
     }));
+  };
+
+  const handleFiltroChange = (event) => {
+    const { name, value } = event.target;
+
+    setFiltros((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const limparFiltros = () => {
+    setFiltros({
+      busca: '',
+      tipo: 'todos',
+      categoria: 'todos',
+      status: 'todos',
+      cardapio: 'todos',
+    });
   };
 
   const atualizarLinha = (campo, index, name, value) => {
@@ -412,6 +478,7 @@ const Cardapio = () => {
         data_inicio: formatarDataInput(detalhe.promocao?.data_inicio),
         data_fim: formatarDataInput(detalhe.promocao?.data_fim),
       });
+      setModalEdicaoAberto(true);
     } catch (error) {
       setErro(error.message);
       abrirPopup({
@@ -455,7 +522,7 @@ const Cardapio = () => {
       <header className="cardapioHeader">
         <div>
           <span className="cardapioMode">
-            {editandoId ? `Editando #${editandoId}` : 'Cadastro'}
+            Cadastro
           </span>
           <h1>Cadastrar Item</h1>
           <p>Cadastre ingredientes, produtos, combos e promoções.</p>
@@ -479,7 +546,35 @@ const Cardapio = () => {
 
       {erro && <p className="cardapioError">{erro}</p>}
 
-      <form className="cardapioForm cadastroItemForm" onSubmit={handleSubmit}>
+      {modalEdicaoAberto && (
+        <div className="cardapioEditBackdrop" aria-hidden="true" />
+      )}
+
+      <form
+        className={`cardapioForm cadastroItemForm${modalEdicaoAberto ? ' cardapioFormEditingModal' : ''}`}
+        onSubmit={handleSubmit}
+        role={modalEdicaoAberto ? 'dialog' : undefined}
+        aria-modal={modalEdicaoAberto ? 'true' : undefined}
+        aria-label={modalEdicaoAberto ? `Editar item ${editandoId}` : undefined}
+      >
+        {modalEdicaoAberto && (
+          <div className="cardapioModalHeader">
+            <div>
+              <span className="cardapioMode">Editando #{editandoId}</span>
+              <h2>Editar item</h2>
+            </div>
+
+            <button
+              type="button"
+              className="cardapioModalClose"
+              onClick={limparFormulario}
+              aria-label="Fechar edição"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         <fieldset className="formBlock formBlockMain">
           <legend>Dados do item</legend>
 
@@ -662,164 +757,43 @@ const Cardapio = () => {
         )}
 
         {form.tipo === 'PRODUTO' && (
-          <fieldset className="formBlock fullWidth">
-            <legend>Ingredientes usados</legend>
-
-            {form.ingredientes.map((ingrediente, index) => (
-              <div className="compositionRow" key={`ingrediente-${index}`}>
-                <select
-                  value={ingrediente.ingrediente_id}
-                  aria-label="Ingrediente usado"
-                  title="Ingrediente usado"
-                  onChange={(event) =>
-                    atualizarLinha(
-                      'ingredientes',
-                      index,
-                      'ingrediente_id',
-                      event.target.value
-                    )
-                  }
-                  required
-                >
-                  <option value="">Ingrediente</option>
-                  {ingredientesDisponiveis.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.nome} ({item.unidade_base})
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="number"
-                  min="0"
-                  step="0.001"
-                  placeholder="Quantidade usada"
-                  value={ingrediente.quantidade_usada}
-                  onChange={(event) =>
-                    atualizarLinha(
-                      'ingredientes',
-                      index,
-                      'quantidade_usada',
-                      event.target.value
-                    )
-                  }
-                  required
-                />
-
-                <select
-                  value={ingrediente.unidade_usada}
-                  aria-label="Unidade usada"
-                  title="Unidade usada"
-                  onChange={(event) =>
-                    atualizarLinha(
-                      'ingredientes',
-                      index,
-                      'unidade_usada',
-                      event.target.value
-                    )
-                  }
-                >
-                  {unidades.map((unidade) => (
-                    <option key={unidade} value={unidade}>
-                      {unidade}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  type="button"
-                  className="btnRemoverLinha"
-                  onClick={() => removerLinha('ingredientes', index)}
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
-
-            <button
-              type="button"
-              className="btnAdicionarLinha"
-              onClick={() =>
-                adicionarLinha('ingredientes', {
-                  ingrediente_id: '',
-                  quantidade_usada: '',
-                  unidade_usada: 'gr',
-                })
-              }
-            >
-              Adicionar ingrediente
-            </button>
-          </fieldset>
+          <ProductCompositionEditor
+            title="Ingredientes usados"
+            variant="ingredientes"
+            rows={form.ingredientes}
+            options={ingredientesDisponiveis}
+            units={unidades}
+            onUpdate={(index, name, value) =>
+              atualizarLinha('ingredientes', index, name, value)
+            }
+            onRemove={(index) => removerLinha('ingredientes', index)}
+            onAdd={() =>
+              adicionarLinha('ingredientes', {
+                ingrediente_id: '',
+                quantidade_usada: '',
+                unidade_usada: 'gr',
+              })
+            }
+          />
         )}
 
         {form.tipo === 'COMBO' && (
-          <fieldset className="formBlock fullWidth">
-            <legend>Produtos dentro do combo</legend>
-
-            {form.combo_itens.map((produto, index) => (
-              <div className="compositionRow" key={`produto-${index}`}>
-                <select
-                  value={produto.produto_id}
-                  aria-label="Produto do combo"
-                  title="Produto do combo"
-                  onChange={(event) =>
-                    atualizarLinha(
-                      'combo_itens',
-                      index,
-                      'produto_id',
-                      event.target.value
-                    )
-                  }
-                  required
-                >
-                  <option value="">Produto</option>
-                  {produtosDisponiveis.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.nome}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="Quantidade"
-                  value={produto.quantidade}
-                  onChange={(event) =>
-                    atualizarLinha(
-                      'combo_itens',
-                      index,
-                      'quantidade',
-                      event.target.value
-                    )
-                  }
-                  required
-                />
-
-                <button
-                  type="button"
-                  className="btnRemoverLinha"
-                  onClick={() => removerLinha('combo_itens', index)}
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
-
-            <button
-              type="button"
-              className="btnAdicionarLinha"
-              onClick={() =>
-                adicionarLinha('combo_itens', {
-                  produto_id: '',
-                  quantidade: 1,
-                })
-              }
-            >
-              Adicionar produto
-            </button>
-          </fieldset>
+          <ProductCompositionEditor
+            title="Produtos dentro do combo"
+            variant="produtos"
+            rows={form.combo_itens}
+            options={produtosDisponiveis}
+            onUpdate={(index, name, value) =>
+              atualizarLinha('combo_itens', index, name, value)
+            }
+            onRemove={(index) => removerLinha('combo_itens', index)}
+            onAdd={() =>
+              adicionarLinha('combo_itens', {
+                produto_id: '',
+                quantidade: 1,
+              })
+            }
+          />
         )}
 
         {form.tipo === 'PROMOCAO' && (
@@ -883,12 +857,93 @@ const Cardapio = () => {
         <div className="produtosSectionHeader">
           <div>
             <h2>Itens cadastrados</h2>
-            <p>{itens.length} registros encontrados</p>
+            <p>
+              {itensFiltrados.length} de {itens.length} registros encontrados
+            </p>
           </div>
+        </div>
+
+        <div className="cardapioFilters" aria-label="Filtros dos itens cadastrados">
+          <label className="cardapioField">
+            <span>Filtrar</span>
+            <input
+              type="search"
+              name="busca"
+              placeholder="Buscar por nome, ID, tipo ou categoria"
+              value={filtros.busca}
+              onChange={handleFiltroChange}
+            />
+          </label>
+
+          <label className="cardapioField">
+            <span>Tipo</span>
+            <select
+              name="tipo"
+              value={filtros.tipo}
+              onChange={handleFiltroChange}
+            >
+              <option value="todos">Todos os tipos</option>
+              {tipos.map((tipo) => (
+                <option key={tipo} value={tipo}>
+                  {formatarTipo(tipo)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="cardapioField">
+            <span>Categoria</span>
+            <select
+              name="categoria"
+              value={filtros.categoria}
+              onChange={handleFiltroChange}
+            >
+              <option value="todos">Todas as categorias</option>
+              {categorias.map((categoria) => (
+                <option key={categoria} value={categoria}>
+                  {categoria}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="cardapioField">
+            <span>Status</span>
+            <select
+              name="status"
+              value={filtros.status}
+              onChange={handleFiltroChange}
+            >
+              <option value="todos">Todos</option>
+              <option value="ativo">Ativos</option>
+              <option value="inativo">Inativos</option>
+            </select>
+          </label>
+
+          <label className="cardapioField">
+            <span>Cardápio</span>
+            <select
+              name="cardapio"
+              value={filtros.cardapio}
+              onChange={handleFiltroChange}
+            >
+              <option value="todos">Todos</option>
+              <option value="sim">Aparece</option>
+              <option value="nao">Não aparece</option>
+            </select>
+          </label>
+
+          <button type="button" className="btnCancelar" onClick={limparFiltros}>
+            Limpar filtros
+          </button>
         </div>
 
         {itens.length === 0 ? (
           <p className="produtosEmpty">Nenhum item cadastrado.</p>
+        ) : itensFiltrados.length === 0 ? (
+          <p className="produtosEmpty">
+            Nenhum item encontrado para os filtros selecionados.
+          </p>
         ) : (
           <table className="produtosTable">
             <thead>
@@ -906,7 +961,7 @@ const Cardapio = () => {
             </thead>
 
             <tbody>
-              {itens.map((item) => (
+              {itensFiltrados.map((item) => (
                 <tr key={item.id}>
                   <td>{item.id}</td>
                   <td>

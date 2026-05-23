@@ -1,5 +1,5 @@
 Mapa de rotas do backend ativo - BurgerFlow 2.0
-Atualizado em: 2026-05-19
+Atualizado em: 2026-05-23
 
 Health
 - GET /api/health
@@ -7,6 +7,7 @@ Health
 Auth
 - POST /api/auth/login
 - GET /api/auth/verify
+- PATCH /api/auth/alterar-senha
 
 Itens
 - GET /api/itens
@@ -63,13 +64,27 @@ Pedidos
 - GET /api/pedidos
 - POST /api/pedidos
 - PATCH /api/pedidos/:id/status
+- PATCH /api/pedidos/:id/status/gerencial
 
 Cozinha
 - GET /api/cozinha/pedidos
 - PATCH /api/cozinha/pedidos/:id/status
+
+Usuarios
+- GET /api/usuarios
+- POST /api/usuarios
+- PUT /api/usuarios/:id
+- PATCH /api/usuarios/:id/senha
+- DELETE /api/usuarios/:id
+
+Relatorios Gerenciais
+- GET /api/gerencial/relatorios/produtos-vendidos
 
 Observacoes
 - Rotas de negocio exigem token, exceto login e health.
 - DELETE de item/produto/ingrediente/combo/promocao desativa o registro.
 - Venda pelo PDV usa POST /api/pedidos.
 - Estoque negativo e permitido no fluxo de venda.
+- Fechamento de caixa usa calculo oficial no backend e retorna diferenca.
+- Cozinha lista pedidos ativos com itens e suporta fluxo de status ate entregue.
+- Rotas de usuarios e relatorios gerenciais exigem permissao por nivel de acesso.

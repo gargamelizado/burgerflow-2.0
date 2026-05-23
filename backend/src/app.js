@@ -7,6 +7,8 @@ const createItemTypeRoutes = require('./modules/products/itemType.routes');
 const cardapioRoutes = require('./modules/products/cardapio.routes');
 const inventoryRoutes = require('./modules/inventory/inventory.routes');
 const cashRoutes = require('./modules/cash/cash.routes');
+const userRoutes = require('./modules/users/user.routes');
+const reportRoutes = require('./modules/reports/report.routes');
 const app = express();
 const orderRoutes = require('./modules/orders/order.routes');
 const kitchenRoutes = require('./modules/kitchen/kitchen.routes');
@@ -28,6 +30,8 @@ app.use('/api/promocoes', createItemTypeRoutes('PROMOCAO'));
 app.use('/api/cardapio', cardapioRoutes);
 app.use('/api/estoque', inventoryRoutes);
 app.use('/api/caixa', cashRoutes);
+app.use('/api/usuarios', userRoutes);
+app.use('/api/gerencial/relatorios', reportRoutes);
 app.use('/api/pedidos', orderRoutes);
 app.use('/api/cozinha', kitchenRoutes);
 
@@ -39,4 +43,3 @@ app.use((req, res) => {
 
 app.use(errorMiddleware);
 module.exports = app;
-

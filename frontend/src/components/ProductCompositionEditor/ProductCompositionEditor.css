@@ -1,0 +1,33 @@
+.compositionEditor {
+  align-items: stretch;
+}
+
+.compositionEditorRows {
+  display: grid;
+  gap: 10px;
+}
+
+.compositionEditorRow {
+  display: grid;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.compositionEditorRowIngredientes {
+  grid-template-columns: minmax(220px, 2fr) minmax(140px, 1fr) 120px auto;
+}
+
+.compositionEditorRowProdutos {
+  grid-template-columns: minmax(220px, 2fr) minmax(140px, 1fr) auto;
+}
+
+@media (max-width: 820px) {
+  .compositionEditorRowIngredientes,
+  .compositionEditorRowProdutos {
+    grid-template-columns: 1fr;
+  }
+}

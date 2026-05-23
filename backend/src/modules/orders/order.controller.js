@@ -21,8 +21,20 @@ const updateStatus = async (req, res) => {
   return res.json(pedido);
 };
 
+const correctStatus = async (req, res) => {
+  const result = await orderService.correctStatus({
+    id: req.params.id,
+    status: req.body?.status,
+    actorUserId: req.user?.id,
+    actorUserLevel: req.user?.nivel_acesso,
+  });
+
+  return res.json(result);
+};
+
 module.exports = {
   list,
   create,
   updateStatus,
+  correctStatus,
 };

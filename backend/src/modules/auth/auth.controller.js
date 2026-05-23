@@ -13,7 +13,18 @@ const verify = async (req, res) => {
   });
 };
 
+const alterarSenha = async (req, res) => {
+  const result = await authService.alterarSenha({
+    usuario_id: req.user?.id,
+    senha_atual: req.body?.senha_atual,
+    nova_senha: req.body?.nova_senha,
+  });
+
+  return res.json(result);
+};
+
 module.exports = {
   login,
   verify,
+  alterarSenha,
 };

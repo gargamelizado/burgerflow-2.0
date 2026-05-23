@@ -11,6 +11,7 @@ import Cardapio from './components/Cardapio/Cardapio';
 import Estoque from './components/Estoque/Estoque';
 import Caixa from './components/Caixa/Caixa';
 import Cozinha from './components/Cozinha/Cozinha';
+import Gerencial from './components/Gerencial/Gerencial';
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     const logged = localStorage.getItem('isLoggedIn');
@@ -57,6 +58,7 @@ const App = () => {
         <Route path="/estoque" element={protectedPage(<Estoque />)} />
         <Route path="/caixa" element={protectedPage(<Caixa />)} />
         <Route path="/cozinha" element={protectedPage(<Cozinha />)} />
+        <Route path="/gerencial" element={protectedPage(<Gerencial />)} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>

@@ -1,8 +1,6 @@
 const cashService = require('./cash.service');
 
-const getUserId = (req) => {
-  return req.user?.id || req.usuario?.id || req.userId || null;
-};
+const getUserId = (req) => req.user?.id || req.usuario?.id || req.userId || null;
 
 const getOpen = async (req, res) => {
   const resultado = await cashService.getOpen();
@@ -22,6 +20,7 @@ const open = async (req, res) => {
 
 const close = async (req, res) => {
   const resultado = await cashService.close({
+    usuario_id: getUserId(req),
     valor_final: req.body.valor_final,
     observacao: req.body.observacao,
   });
@@ -29,13 +28,9 @@ const close = async (req, res) => {
   return res.json(resultado);
 };
 
-module.exports = {
-  getOpen,
-  open,
-  close,
-};
 const createMovement = async (req, res) => {
   const resultado = await cashService.createMovement({
+    usuario_id: getUserId(req),
     tipo: req.body.tipo,
     valor: req.body.valor,
     motivo: req.body.motivo,
@@ -49,6 +44,7 @@ const listMovements = async (req, res) => {
 
   return res.json(resultado);
 };
+
 module.exports = {
   getOpen,
   open,

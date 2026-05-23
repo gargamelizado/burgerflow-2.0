@@ -3,7 +3,7 @@
 }
 
 .cozinhaHeader {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .cozinhaHeader h1 {
@@ -26,73 +26,198 @@
   margin-bottom: 20px;
 }
 
-.cozinhaSection {
-  overflow-x: auto;
-  background-color: var(--surface);
-  padding: 24px;
+.cozinhaToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.cozinhaFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btnFiltro {
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
-}
-
-.cozinhaSection h2 {
-  margin-bottom: 16px;
+  border-radius: 8px;
+  background: var(--surface);
   color: var(--text-main);
-}
-
-.cozinhaTable {
-  width: 100%;
-  min-width: 900px;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.cozinhaTable th,
-.cozinhaTable td {
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
-  text-align: left;
-}
-
-.cozinhaTable th {
-  background-color: var(--surface-soft);
-  color: var(--text-muted);
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-.statusBadge {
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 13px;
+  padding: 8px 12px;
   font-weight: 700;
-  text-transform: capitalize;
+  cursor: pointer;
 }
 
-.statusNovo {
-  background-color: rgba(35, 100, 170, 0.12);
+.btnFiltro.isActive {
+  border-color: rgba(35, 100, 170, 0.35);
+  background: rgba(35, 100, 170, 0.12);
   color: var(--info);
 }
 
-.statusEmPreparo {
-  background-color: rgba(199, 138, 0, 0.14);
+.btnAtualizarPedidos {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+  background: #eef0f3;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.btnAtualizarPedidos:hover {
+  background: #dde1e7;
+}
+
+.btnAtualizarPedidos:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cozinhaBoard {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.cozinhaColuna {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cozinhaColunaHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cozinhaColunaHeader h2 {
+  font-size: 16px;
+  color: var(--text-main);
+}
+
+.cozinhaColunaHeader span {
+  min-width: 24px;
+  text-align: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.cozinhaColunaBody {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.cozinhaColunaEmpty {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.pedidoCard {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.pedidoCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pedidoCardHeader strong {
+  color: var(--text-main);
+}
+
+.pedidoTempo {
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tempoNormal {
+  background: rgba(22, 131, 90, 0.12);
+  color: var(--success);
+}
+
+.tempoAtencao {
+  background: rgba(199, 138, 0, 0.14);
   color: var(--warning);
 }
 
-.statusPronto {
-  background-color: rgba(22, 131, 90, 0.12);
-  color: var(--success);
+.tempoAtrasado {
+  background: rgba(180, 35, 48, 0.14);
+  color: var(--danger);
+}
+
+.pedidoMeta {
+  display: grid;
+  gap: 4px;
+}
+
+.pedidoMeta p,
+.pedidoObservacao {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.pedidoItens {
+  display: grid;
+  gap: 6px;
+}
+
+.pedidoItens strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.pedidoItens ul {
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.pedidoItens li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 9px;
+  font-size: 13px;
+}
+
+.pedidoItens li strong {
+  font-size: 13px;
 }
 
 .btnCozinha {
   border: none;
   border-radius: 8px;
-  padding: 8px 10px;
-  font-weight: 600;
+  min-height: 40px;
+  padding: 8px 12px;
+  font-weight: 700;
   cursor: pointer;
-  margin-right: 8px;
-  transition: 0.2s ease;
 }
 
 .btnPreparo {
@@ -106,19 +231,38 @@
 }
 
 .btnPronto {
+  background-color: rgba(22, 131, 90, 0.16);
+  color: var(--success);
+}
+
+.btnPronto:hover {
   background-color: var(--success);
   color: #fff;
 }
 
-.btnPronto:hover {
-  background-color: #106f4b;
-}
-
 .btnEntregue {
-  background-color: #5d646f;
-  color: #fff;
+  background-color: rgba(35, 100, 170, 0.14);
+  color: var(--info);
 }
 
 .btnEntregue:hover {
-  background-color: #444b55;
+  background-color: var(--info);
+  color: #fff;
+}
+
+@media (max-width: 1200px) {
+  .cozinhaBoard {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .cozinhaToolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cozinhaBoard {
+    grid-template-columns: 1fr;
+  }
 }

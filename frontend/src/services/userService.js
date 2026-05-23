@@ -1,8 +1,6 @@
 const API_URL = 'http://localhost:3006/api';
 
-const getToken = () => {
-  return localStorage.getItem('token');
-};
+const getToken = () => localStorage.getItem('token');
 
 const tratarResposta = async (response) => {
   const contentType = response.headers.get('content-type');
@@ -22,8 +20,8 @@ const tratarResposta = async (response) => {
   return data;
 };
 
-export const listarPedidos = async () => {
-  const response = await fetch(`${API_URL}/pedidos`, {
+export const listarUsuarios = async () => {
+  const response = await fetch(`${API_URL}/usuarios`, {
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },
@@ -32,40 +30,51 @@ export const listarPedidos = async () => {
   return tratarResposta(response);
 };
 
-export const criarPedido = async (pedido) => {
-  const response = await fetch(`${API_URL}/pedidos`, {
+export const criarUsuario = async (payload) => {
+  const response = await fetch(`${API_URL}/usuarios`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify(pedido),
+    body: JSON.stringify(payload),
   });
 
   return tratarResposta(response);
 };
 
-export const atualizarStatusPedido = async (id, status) => {
-  const response = await fetch(`${API_URL}/pedidos/${id}/status`, {
-    method: 'PATCH',
+export const atualizarUsuario = async (id, payload) => {
+  const response = await fetch(`${API_URL}/usuarios/${id}`, {
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify(payload),
   });
 
   return tratarResposta(response);
 };
 
-export const corrigirStatusPedidoGerencial = async (id, status) => {
-  const response = await fetch(`${API_URL}/pedidos/${id}/status/gerencial`, {
+export const alterarSenhaUsuario = async (id, senha) => {
+  const response = await fetch(`${API_URL}/usuarios/${id}/senha`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ senha }),
+  });
+
+  return tratarResposta(response);
+};
+
+export const desativarUsuario = async (id) => {
+  const response = await fetch(`${API_URL}/usuarios/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
   });
 
   return tratarResposta(response);

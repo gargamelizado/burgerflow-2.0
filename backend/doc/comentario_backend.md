@@ -1,13 +1,14 @@
 # Comentario do backend - BurgerFlow 2.0
 
-Atualizado em: 2026-05-19.
+Atualizado em: 2026-05-23.
 
 Este backend e uma API Express em CommonJS, com MySQL via `mysql2/promise`,
-autenticacao JWT e senha com bcrypt. O padrao principal continua sendo:
+autenticacao JWT e senha com bcrypt. O padrao principal continua:
 
 Route -> Controller -> Service -> Repository -> MySQL.
 
-Nesta fase o escopo ativo e basico: cardapio, estoque, pedidos e caixa.
+Escopo ativo do MVP: cardapio, estoque, pedidos, caixa, cozinha e menu
+gerencial.
 
 ## Entrada da aplicacao
 
@@ -18,11 +19,11 @@ Nesta fase o escopo ativo e basico: cardapio, estoque, pedidos e caixa.
 - `src/config/env.js`: define porta, banco e segredo JWT.
 - `src/config/db.js`: cria pool MySQL.
 - `src/middlewares/auth.middleware.js`: valida `Authorization: Bearer <token>`.
-- `src/middlewares/error.middleware.js`: devolve erro em JSON.
+- `src/middlewares/error.middleware.js`: devolve erro sempre em JSON.
 
 ## Tipos de item
 
-Os unicos tipos aceitos nesta fase sao:
+Os unicos tipos aceitos nesta fase:
 
 - `INGREDIENTE`
 - `PRODUTO`
@@ -30,7 +31,6 @@ Os unicos tipos aceitos nesta fase sao:
 - `PROMOCAO`
 
 Nao existe fluxo ativo de `PRODUTO_SIMPLES` ou `PRODUTO_COMPOSTO`.
-Produto simples e apenas um `PRODUTO` com um ingrediente.
 
 ## Regras principais
 
@@ -38,14 +38,13 @@ Produto simples e apenas um `PRODUTO` com um ingrediente.
 - Produto aparece no cardapio e baixa ingredientes.
 - Combo aparece no cardapio, contem produtos e baixa os ingredientes desses
   produtos.
-- Promocao aparece no cardapio, aponta para um produto ou combo e baixa estoque
+- Promocao aparece no cardapio, aponta para produto ou combo e baixa estoque
   como o item original.
-- A categoria `todos` existe apenas como filtro do frontend. Ela nao deve ser
-  salva no banco.
+- A categoria `todos` existe apenas no frontend e nao deve ser salva no banco.
 - Estoque e controlado por `quantidade_total_base` e `unidade_base`.
 - Conversoes aceitas: `kg -> gr`, `gr -> gr`, `li -> ml`, `ml -> ml`.
-- O pedido nao bloqueia venda por falta de estoque. Se o estoque ficar negativo,
-  o backend retorna aviso em `avisos_estoque` e conclui a venda.
+- O pedido nao bloqueia venda por falta de estoque; pode gerar
+  `avisos_estoque`.
 
 ## Funcoes de regra
 
@@ -68,6 +67,9 @@ Arquivo: `src/modules/orders/orderStock.service.js`
 
 - `POST /api/auth/login`
 - `GET /api/auth/verify`
+- `PATCH /api/auth/alterar-senha`
+
+`alterar-senha` valida senha atual e aplica hash bcrypt para nova senha.
 
 ### Itens
 
@@ -80,7 +82,7 @@ Base generica:
 - `DELETE /api/itens/:id`
 - `GET /api/itens/cardapio`
 
-Rotas por tipo, usando a mesma regra de itens:
+Rotas por tipo:
 
 - `GET /api/produtos`
 - `POST /api/produtos`
@@ -138,18 +140,25 @@ Regras:
 - `POST /api/caixa/movimento`
 - `GET /api/caixa/movimentos`
 
-Regras:
+Regras atuais:
 
-- so permite um caixa aberto.
-- movimento manual aceita `suprimento` e `sangria`.
-- venda de PDV e registrada pelo fluxo de pedido como movimento `venda`.
-- fechamento calcula valor esperado e diferenca.
+- so permite um caixa aberto
+- abertura exige usuario autenticado
+- movimento manual aceita `suprimento` e `sangria`
+- venda de PDV entra como movimento `venda` via `POST /api/pedidos`
+- fechamento oficial e calculado no backend:
+  - `valor_esperado = valor_inicial + vendas + suprimentos - sangrias - despesas`
+  - `diferenca = valor_final - valor_esperado`
+- fechamento salva `valor_final`, `valor_esperado`, `diferenca`, `observacao`,
+  `status=fechado` e `fechado_em`
+- retorno inclui resumo e resultado: `conferido`, `faltou` ou `sobrou`
 
 ### Pedidos
 
 - `GET /api/pedidos`
 - `POST /api/pedidos`
 - `PATCH /api/pedidos/:id/status`
+- `PATCH /api/pedidos/:id/status/gerencial`
 
 Ao criar pedido:
 
@@ -162,13 +171,48 @@ Ao criar pedido:
 - registra movimentacao de estoque
 - registra movimento de caixa do tipo `venda`
 - retorna `avisos_estoque` quando algum ingrediente ficar negativo
+- correcoes gerenciais de status exigem perfil `admin` ou `gerente`
+- correcoes gerenciais registram auditoria em `auditoria`
 
 ### Cozinha
 
 - `GET /api/cozinha/pedidos`
 - `PATCH /api/cozinha/pedidos/:id/status`
 
-Lista pedidos que nao estao `entregue` nem `cancelado`.
+Regras atuais:
+
+- lista pedidos com status `novo`, `em_preparo`, `pronto` e `entregue`
+- nao lista pedidos `cancelado`
+- retorno inclui `tempo_minutos`
+- retorno inclui itens do pedido (`pedido_itens`) para renderizacao da KDS
+
+### Usuarios
+
+- `GET /api/usuarios` (`admin`, `gerente`)
+- `POST /api/usuarios` (`admin`)
+- `PUT /api/usuarios/:id` (`admin`)
+- `PATCH /api/usuarios/:id/senha` (`admin` ou `gerente` para propria senha)
+- `DELETE /api/usuarios/:id` (`admin`)
+
+Regras:
+
+- senha com bcrypt
+- email unico
+- nao retorna `senha_hash` no payload de resposta
+- `DELETE` desativa usuario (`ativo = false`)
+- usuario nao pode desativar a propria conta
+
+### Relatorios Gerenciais
+
+- `GET /api/gerencial/relatorios/produtos-vendidos?data_inicio=YYYY-MM-DD&data_fim=YYYY-MM-DD`
+
+Regras:
+
+- exige autenticacao
+- exige perfil `admin` ou `gerente`
+- agrega `pedido_itens` por item no periodo
+- ignora pedidos `cancelado`
+- retorna resumo com quantidade total e valor total vendido
 
 ## Banco de dados
 
@@ -187,10 +231,16 @@ Lista pedidos que nao estao `entregue` nem `cancelado`.
 - `caixa_movimentos`
 - `auditoria`
 
-`databases/migration_cardapio_estoque_basico.sql` e a migracao incremental para
-levar um banco antigo para este modelo basico.
+`databases/migration_cardapio_estoque_basico.sql` continua sendo a migracao
+incremental para banco antigo.
 
-Campos que nao fazem parte desta fase:
+Para esta fase foi adicionada evolucao incremental de perfil em `usuarios`:
+
+- conversao de legado `operador` para `vendedor`
+- enum final de nivel de acesso:
+  `admin`, `gerente`, `vendedor`, `estoquista`, `cozinha`
+
+Campos fora do MVP:
 
 - `preco_compra`
 - `custo_unitario`
@@ -200,7 +250,7 @@ Campos que nao fazem parte desta fase:
 
 ## Credencial de teste
 
-O seed cria/atualiza:
+Seed:
 
 - email: `admin@estoque.com`
 - senha: `admin123`
@@ -209,19 +259,25 @@ O seed cria/atualiza:
 
 Validacoes ja executadas nesta fase:
 
-- `mysql -uroot -p123456789 < databases/schema.sql`
-- `mysql -uroot -p123456789 < databases/migration_cardapio_estoque_basico.sql`
-- `node --check` nos arquivos JS alterados do backend
+- `node --check` nos arquivos alterados do backend
 - `npm run lint` em `frontend/`
 - `npm run build` em `frontend/`
-- smoke test de API com produto duplicando ingrediente na receita, agrupando em
-  uma linha e vendendo com estoque negativo permitido
-- screenshot Playwright da rota `/caixa` carregando a tela de PDV
+- checagem sem `alert/confirm/prompt/window.*` no frontend
+- smoke de API cobrindo:
+  - venda bloqueada com caixa fechado
+  - fechamento de caixa em 3 cenarios (conferido, faltou, sobrou)
+  - fluxo principal com `POST /api/pedidos`
+  - pedido aparecendo na cozinha
+  - transicao de status `novo -> em_preparo -> pronto -> entregue`
+  - rotas de usuarios com e sem permissao
+  - alteracao de senha propria (`/api/auth/alterar-senha`)
+  - relatorio gerencial com bloqueio por perfil
+  - correcao gerencial de status com bloqueio por perfil
+- `GET /api/health` respondendo JSON
 
 ## Pendencias conhecidas
 
 - Centralizar `API_URL`, `getToken` e tratamento de resposta do frontend em um
   helper unico.
-- Fazer uma bateria manual completa no navegador para login, cadastro de todos
-  os tipos, venda, estoque negativo, pedidos, cozinha e fechamento de caixa.
+- Rodar bateria manual completa no navegador com checklist funcional.
 - Criar testes automatizados de API quando o MVP estabilizar.

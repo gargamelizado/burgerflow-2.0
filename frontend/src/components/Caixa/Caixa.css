@@ -36,36 +36,111 @@
   margin-bottom: 24px;
 }
 
+.caixaSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 .caixaSection h2 {
   margin-bottom: 16px;
   color: var(--text-main);
 }
 
+.caixaSectionHeader h2 {
+  margin-bottom: 0;
+}
+
+.btnAtualizarCaixa {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+  background: #eef0f3;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.btnAtualizarCaixa:hover {
+  background: #dde1e7;
+}
+
+.caixaInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.caixaInfoGrid p {
+  margin: 0;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
 .caixaStatusAberto {
   color: var(--success);
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .caixaStatusFechado {
   color: var(--danger);
-  font-weight: bold;
+  font-weight: 700;
 }
 
-.caixaInfo p {
+.caixaResumo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.caixaResumoCard {
+  background-color: var(--surface-soft);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.caixaResumoCard span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 13px;
   margin-bottom: 8px;
+}
+
+.caixaResumoCard strong {
   color: var(--text-main);
+  font-size: 18px;
+}
+
+.caixaResumoEsperado {
+  background: rgba(35, 100, 170, 0.1);
+  border-color: rgba(35, 100, 170, 0.24);
 }
 
 .caixaForm {
   display: grid;
-  grid-template-columns: 1fr 2fr auto;
-  grid-auto-flow: column;
   gap: 12px;
+}
+
+.caixaFormAbertura,
+.caixaFormFechamento {
+  grid-template-columns: minmax(180px, 1fr) minmax(240px, 2fr) auto;
   align-items: center;
 }
 
-.caixaForm input {
-  padding: 12px;
+.caixaFormMovimento {
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(240px, 2fr) auto;
+  align-items: center;
+}
+
+.caixaForm input,
+.caixaForm select {
+  min-height: 44px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-soft);
@@ -73,7 +148,8 @@
   outline: none;
 }
 
-.caixaForm input:focus {
+.caixaForm input:focus,
+.caixaForm select:focus {
   background: var(--surface);
   border-color: var(--brand);
 }
@@ -82,7 +158,8 @@
 .btnFecharCaixa {
   border: none;
   border-radius: 10px;
-  padding: 12px 16px;
+  min-height: 44px;
+  padding: 10px 16px;
   font-weight: 700;
   cursor: pointer;
   transition: 0.2s ease;
@@ -105,23 +182,39 @@
 .btnFecharCaixa:hover {
   background-color: #941b27;
 }
-.caixaForm select {
-  padding: 12px;
+
+.caixaDiferenca {
+  background-color: var(--surface-soft);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-soft);
-  font-size: 15px;
-  outline: none;
+  border-radius: 12px;
+  padding: 14px;
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
 }
 
-.caixaForm select:focus {
-  background: var(--surface);
-  border-color: var(--brand);
+.caixaDiferenca p {
+  margin: 0;
+}
+
+.diferencaZero {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.diferencaPositiva {
+  color: var(--info);
+  font-weight: 700;
+}
+
+.diferencaNegativa {
+  color: var(--danger);
+  font-weight: 700;
 }
 
 .caixaTable {
   width: 100%;
-  min-width: 720px;
+  min-width: 760px;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -131,6 +224,7 @@
   padding: 12px;
   border-bottom: 1px solid var(--border);
   text-align: left;
+  vertical-align: top;
 }
 
 .caixaTable th {
@@ -140,67 +234,15 @@
   text-transform: uppercase;
 }
 
-.caixaTable td:nth-child(2) {
-  font-weight: 700;
+.movimentoTipo {
   text-transform: capitalize;
-}
-.caixaResumo {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  font-weight: 700;
 }
 
-.caixaResumoCard {
-  background-color: var(--surface-soft);
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-}
-
-.caixaResumoCard span {
-  display: block;
-  color: var(--text-muted);
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-
-.caixaResumoCard strong {
-  color: var(--text-main);
-  font-size: 20px;
-}
-.caixaDiferenca {
-  background-color: var(--surface-soft);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  grid-column: 1 / -1;
-}
-
-.caixaDiferenca p {
-  margin-bottom: 8px;
-}
-
-.diferencaZero {
-  color: var(--success);
-  font-weight: bold;
-}
-
-.diferencaPositiva {
-  color: var(--info);
-  font-weight: bold;
-}
-
-.diferencaNegativa {
-  color: var(--danger);
-  font-weight: bold;
-}
-@media (max-width: 900px) {
-  .caixaResumo {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 900px) {
-  .caixaForm {
+@media (max-width: 1000px) {
+  .caixaFormAbertura,
+  .caixaFormFechamento,
+  .caixaFormMovimento {
     grid-template-columns: 1fr;
   }
 }

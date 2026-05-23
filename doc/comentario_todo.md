@@ -1,6 +1,6 @@
 # Comentario geral - BurgerFlow 2.0
 
-Atualizado em: 2026-05-19.
+Atualizado em: 2026-05-23.
 
 Este arquivo resume o estado atual do projeto para evitar confusao entre o MVP
 basico implementado agora e planos maiores de ERP/PDV para fases futuras.
@@ -14,12 +14,13 @@ O projeto esta organizado como um monorepo simples:
 - `databases/`: schema, seed e migracao incremental do modelo basico.
 - `backend exemplo/`: referencia antiga/maior, nao e o backend ativo.
 
-O escopo atual esta limitado a:
+O escopo atual continua limitado a:
 
 - cardapio
 - estoque
 - pedidos
 - caixa/PDV
+- menu gerencial (admin/gerente)
 
 ## Modelo atual
 
@@ -58,6 +59,7 @@ Rotas principais montadas em `backend/src/app.js`:
 - `GET /api/health`
 - `POST /api/auth/login`
 - `GET /api/auth/verify`
+- `PATCH /api/auth/alterar-senha`
 - `GET /api/itens`
 - `GET /api/itens/:id`
 - `POST /api/itens`
@@ -83,10 +85,78 @@ Rotas principais montadas em `backend/src/app.js`:
 - `GET /api/pedidos`
 - `POST /api/pedidos`
 - `PATCH /api/pedidos/:id/status`
+- `PATCH /api/pedidos/:id/status/gerencial`
 - `GET /api/cozinha/pedidos`
 - `PATCH /api/cozinha/pedidos/:id/status`
+- `GET /api/usuarios`
+- `POST /api/usuarios`
+- `PUT /api/usuarios/:id`
+- `PATCH /api/usuarios/:id/senha`
+- `DELETE /api/usuarios/:id`
+- `GET /api/gerencial/relatorios/produtos-vendidos`
 
 O backend usa `PORT=3006` por padrao e banco MySQL `burger_flow_2_0`.
+
+## Caixa (estado atual do MVP)
+
+Fechamento de caixa completo implementado, com regra oficial no backend.
+
+Calculo oficial:
+
+`valor_esperado = valor_inicial + vendas + suprimentos - sangrias - despesas`
+
+`diferenca = valor_final - valor_esperado`
+
+No fechamento, o backend salva:
+
+- `valor_final`
+- `valor_esperado`
+- `diferenca`
+- `observacao`
+- `status = fechado`
+- `fechado_em`
+
+Validacoes ativas:
+
+- nao fecha sem caixa aberto
+- nao fecha caixa ja fechado
+- nao aceita `valor_final` invalido/NaN
+- nao fecha sem usuario autenticado
+- retorna erro em JSON
+
+## Cozinha (estado atual do MVP)
+
+A tela da cozinha foi melhorada para um visual tipo KDS, sem mudar a regra de
+pedido do MVP:
+
+- continua lendo pedidos criados por `POST /api/pedidos`
+- colunas por status: `novo`, `em_preparo`, `pronto`, `entregue`
+- cards com numero, cliente, tipo, data/hora, tempo e itens do pedido
+- acoes guiadas: Iniciar preparo -> Marcar pronto -> Entregar
+- filtro rapido: Todos, Novos, Em preparo, Prontos
+- botao de atualizar pedidos
+- pedidos entregues ficam visiveis na coluna `entregue`
+
+## Menu Gerencial (estado atual do MVP)
+
+Rota frontend:
+
+- `/gerencial`
+
+Regras de acesso:
+
+- link do menu so aparece para `admin` e `gerente`
+- usuario sem permissao nao ve o link
+- acesso direto sem permissao exibe tela de acesso restrito
+
+Blocos implementados:
+
+- Caixa Gerencial
+- Pedidos (correcao de status)
+- Reimprimir comprovante (nao fiscal)
+- Relatorio de produtos vendidos por periodo
+- Usuarios
+- Alterar minha senha
 
 ## Banco de dados atual
 
@@ -108,6 +178,13 @@ O backend usa `PORT=3006` por padrao e banco MySQL `burger_flow_2_0`.
 `databases/migration_cardapio_estoque_basico.sql` existe para atualizar banco
 antigo sem recriar tudo do zero.
 
+Para as melhorias de Caixa e Cozinha desta fase nao foi necessario criar nova
+migration.
+
+Para Menu Gerencial foi aplicada evolucao de perfis em `usuarios.nivel_acesso`:
+
+- `admin`, `gerente`, `vendedor`, `estoquista`, `cozinha`
+
 ## Frontend atual
 
 Rotas registradas em `frontend/src/App.jsx`:
@@ -119,6 +196,7 @@ Rotas registradas em `frontend/src/App.jsx`:
 - `/estoque`
 - `/caixa`
 - `/cozinha`
+- `/gerencial`
 
 Telas principais:
 
@@ -128,13 +206,14 @@ Telas principais:
 - Cardapio / Cadastrar Item
 - Estoque
 - Caixa com PDV
-- Cozinha
+- Cozinha (KDS)
+- Menu Gerencial
 
-Mensagens importantes do fluxo foram migradas para popups dentro da tela.
+Mensagens do fluxo usam popup/modal interno.
 Nao ha uso ativo de `alert`, `confirm`, `prompt` ou `window.*` em
 `frontend/src`.
 
-## Fluxo de venda atual
+## Fluxo principal de venda (mantido)
 
 1. Usuario abre caixa.
 2. PDV lista itens do cardapio.
@@ -145,7 +224,8 @@ Nao ha uso ativo de `alert`, `confirm`, `prompt` ou `window.*` em
 7. Backend cria pedido e itens.
 8. Backend baixa estoque dos ingredientes, permitindo negativo.
 9. Backend registra movimento de caixa do tipo `venda`.
-10. Frontend mostra sucesso e, se existir, aviso de estoque negativo.
+10. Pedido aparece na cozinha.
+11. Frontend mostra sucesso e avisos, se existirem.
 
 ## Validacao executada
 
@@ -153,15 +233,27 @@ Evidencias ja executadas nesta fase:
 
 - schema aplicado em MySQL
 - migracao aplicada em MySQL
-- sintaxe do backend verificada com `node --check`
+- `node --check` nos arquivos alterados do backend
 - `npm run lint` no frontend passou
 - `npm run build` no frontend passou
-- smoke test de API para cadastro/receita duplicada/venda com estoque negativo
-- screenshot Playwright da rota `/caixa` carregando PDV
+- checagem de frontend sem `alert/confirm/prompt/window.*`
+- smoke test de API cobrindo:
+  - venda bloqueada com caixa fechado
+  - fechamento de caixa: conferido, faltou e sobrou
+  - fluxo principal via `POST /api/pedidos`
+  - pedido aparecendo na cozinha
+  - transicao de status na cozinha ate `entregue`
+  - usuarios sem token: 401
+  - usuarios com perfil sem permissao: 403
+  - criacao/desativacao de usuario por admin
+  - alteracao de senha propria
+  - relatorio gerencial com controle por perfil
+  - correcao gerencial de status de pedido com controle por perfil
+- health check `GET /api/health` respondendo JSON
 
 ## Pendencias recomendadas
 
 - Rodar checklist manual completo no navegador.
 - Centralizar configuracao de API do frontend.
-- Criar testes automatizados de API para o fluxo de pedido e estoque negativo.
-- Revisar permissao por papel em rotas sensiveis antes de usar em producao.
+- Criar testes automatizados de API para fluxo de pedidos, caixa e cozinha.
+- Revisar permissao por papel em rotas sensiveis antes de uso em producao.

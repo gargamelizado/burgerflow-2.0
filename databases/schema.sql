@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   nome VARCHAR(100) NOT NULL,
   email VARCHAR(150) NOT NULL UNIQUE,
   senha_hash VARCHAR(255) NOT NULL,
-  nivel_acesso ENUM('admin', 'operador', 'cozinha') NOT NULL DEFAULT 'operador',
+  nivel_acesso ENUM('admin', 'gerente', 'vendedor', 'estoquista', 'cozinha') NOT NULL DEFAULT 'vendedor',
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

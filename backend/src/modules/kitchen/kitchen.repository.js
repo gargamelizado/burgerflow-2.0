@@ -12,13 +12,38 @@ const listOrders = async () => {
       total,
       observacao,
       criado_em,
-      atualizado_em
+      atualizado_em,
+      TIMESTAMPDIFF(MINUTE, criado_em, NOW()) AS tempo_minutos
     FROM pedidos
-    WHERE status NOT IN ('entregue', 'cancelado')
+    WHERE status <> 'cancelado'
     ORDER BY criado_em ASC
   `);
 
-  return rows;
+  if (!rows.length) {
+    return [];
+  }
+
+  const pedidoIds = rows.map((pedido) => pedido.id);
+  const [itens] = await db.query(
+    `
+    SELECT
+      pedido_id,
+      item_nome,
+      item_tipo,
+      quantidade,
+      preco_unitario,
+      subtotal
+    FROM pedido_itens
+    WHERE pedido_id IN (?)
+    ORDER BY id ASC
+    `,
+    [pedidoIds]
+  );
+
+  return rows.map((pedido) => ({
+    ...pedido,
+    itens: itens.filter((item) => item.pedido_id === pedido.id),
+  }));
 };
 
 const findById = async (id) => {
@@ -33,7 +58,8 @@ const findById = async (id) => {
       total,
       observacao,
       criado_em,
-      atualizado_em
+      atualizado_em,
+      TIMESTAMPDIFF(MINUTE, criado_em, NOW()) AS tempo_minutos
     FROM pedidos
     WHERE id = ?
     `,
@@ -61,4 +87,3 @@ module.exports = {
   findById,
   updateStatus,
 };
-

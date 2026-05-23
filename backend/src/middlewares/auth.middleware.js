@@ -31,6 +31,23 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
+const requireAccess = (allowedLevels = []) => {
+  const levels = Array.isArray(allowedLevels) ? allowedLevels : [];
+
+  return (req, res, next) => {
+    const userLevel = req.user?.nivel_acesso;
+
+    if (!userLevel || !levels.includes(userLevel)) {
+      return res.status(403).json({
+        message: 'Acesso restrito para este perfil.',
+      });
+    }
+
+    return next();
+  };
+};
+
 module.exports = {
   authenticateToken,
+  requireAccess,
 };

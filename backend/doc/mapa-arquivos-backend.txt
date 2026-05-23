@@ -1,5 +1,5 @@
 Mapa de arquivos do backend ativo - BurgerFlow 2.0
-Atualizado em: 2026-05-19
+Atualizado em: 2026-05-23
 
 backend/src/app.js
 backend/src/server.js
@@ -36,6 +36,16 @@ backend/src/modules/orders/order.service.js
 backend/src/modules/orders/orderStock.service.js
 backend/src/modules/orders/order.repository.js
 
+backend/src/modules/users/user.routes.js
+backend/src/modules/users/user.controller.js
+backend/src/modules/users/user.service.js
+backend/src/modules/users/user.repository.js
+
+backend/src/modules/reports/report.routes.js
+backend/src/modules/reports/report.controller.js
+backend/src/modules/reports/report.service.js
+backend/src/modules/reports/report.repository.js
+
 backend/src/modules/cash/cash.routes.js
 backend/src/modules/cash/cash.controller.js
 backend/src/modules/cash/cash.service.js
@@ -54,3 +64,4 @@ databases/migration_cardapio_estoque_basico.sql
 
 Observacao:
 backend exemplo/ e referencia antiga. Este mapa aponta para o backend ativo.
+As melhorias recentes incluem modulos de usuarios e relatorios gerenciais.

@@ -83,6 +83,54 @@
   margin-bottom: 28px;
 }
 
+.cardapioEditBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(17, 24, 39, 0.56);
+}
+
+.cardapioFormEditingModal {
+  position: fixed;
+  inset: 28px;
+  z-index: 910;
+  width: min(1040px, calc(100vw - 32px));
+  max-height: calc(100vh - 56px);
+  margin: 0 auto;
+  overflow: auto;
+}
+
+.cardapioModalHeader {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 4px;
+}
+
+.cardapioModalHeader h2 {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 24px;
+}
+
+.cardapioModalClose {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: #eef0f3;
+  color: var(--text-main);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cardapioModalClose:hover {
+  background: #dde1e7;
+}
+
 .cardapioForm input,
 .cardapioForm select {
   width: 100%;
@@ -261,6 +309,46 @@
   color: var(--text-muted);
   font-size: 14px;
   margin-top: 2px;
+}
+
+.cardapioFilters {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(140px, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.cardapioFilters input,
+.cardapioFilters select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+}
+
+.cardapioFilters input::placeholder {
+  color: #9aa1ac;
+}
+
+.cardapioFilters input:focus,
+.cardapioFilters select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(214, 40, 40, 0.12);
+}
+
+.cardapioFilters .btnCancelar {
+  min-height: 42px;
+  white-space: nowrap;
 }
 
 .produtosEmpty {
@@ -456,9 +544,20 @@
     padding: 16px;
   }
 
+  .cardapioFormEditingModal {
+    inset: 14px;
+    width: calc(100vw - 28px);
+    max-height: calc(100vh - 28px);
+  }
+
+  .cardapioModalHeader {
+    align-items: stretch;
+  }
+
   .cadastroItemForm .formBlock,
   .cadastroItemForm .formBlockMain,
-  .compositionRow {
+  .compositionRow,
+  .cardapioFilters {
     grid-template-columns: 1fr;
   }
 

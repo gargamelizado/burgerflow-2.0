@@ -207,8 +207,51 @@ const updateStatus = async (id, status) => {
   return orderRepository.updateStatus(id, status);
 };
 
+const correctStatus = async ({ id, status, actorUserId, actorUserLevel }) => {
+  if (!['admin', 'gerente'].includes(actorUserLevel)) {
+    const error = new Error('Acesso restrito para correção de status.');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (!statusPermitidos.includes(status)) {
+    const error = new Error('Status de pedido inválido.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const pedido = await orderRepository.findById(id);
+
+  if (!pedido) {
+    const error = new Error('Pedido não encontrado.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const statusAnterior = pedido.status;
+  const updated = await orderRepository.updateStatus(id, status);
+
+  await orderRepository.logAudit({
+    usuario_id: actorUserId,
+    acao: 'pedido_status_corrigido',
+    entidade: 'pedidos',
+    entidade_id: Number(id),
+    detalhes: {
+      status_anterior: statusAnterior,
+      status_novo: status,
+      corrigido_por: actorUserLevel,
+    },
+  });
+
+  return {
+    message: 'Status do pedido corrigido com sucesso.',
+    pedido: updated,
+  };
+};
+
 module.exports = {
   list,
   create,
   updateStatus,
+  correctStatus,
 };

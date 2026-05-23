@@ -1,6 +1,6 @@
 # Comentario do frontend - BurgerFlow 2.0
 
-Atualizado em: 2026-05-19.
+Atualizado em: 2026-05-23.
 
 O frontend e uma aplicacao React + Vite com `react-router`. A autenticacao e
 controlada no cliente por `localStorage`, usando `isLoggedIn`, `token` e
@@ -23,17 +23,18 @@ Rotas registradas:
 - `/estoque`
 - `/caixa`
 - `/cozinha`
+- `/gerencial`
 
 ## Mensagens e popups
 
-As telas operacionais usam popup visual dentro da propria aplicacao para
-sucesso, erro, confirmacao e avisos.
+As telas operacionais usam popup/modal interno para sucesso, erro, confirmacao
+e aviso.
 
-Checagem feita:
+Checagem:
 
-- `rg -n "\b(alert|confirm|prompt)\s*\(|window\." frontend/src`
+- `rg -n "\b(alert|confirm|prompt)\s*\(|window\.(alert|confirm|prompt)" frontend/src`
 
-Resultado esperado: sem ocorrencias.
+Resultado atual: sem ocorrencias.
 
 ## Telas
 
@@ -64,17 +65,11 @@ Funcionalidades:
 
 - lista itens cadastrados
 - cadastra `INGREDIENTE`, `PRODUTO`, `COMBO` e `PROMOCAO`
-- edita item em popup
+- edita item em popup/modal ao clicar `Editar`
+- filtra itens por texto, tipo, categoria, status e exibicao no cardapio
 - desativa item
-- muda o formulario conforme o tipo selecionado
-- nao salva categoria `todos`
-
-Fluxos:
-
-- ingrediente: entrada por `cx`, `pacote` ou `medida`
-- produto: vincula um ou mais ingredientes
-- combo: vincula produtos
-- promocao: aponta para produto ou combo
+- muda o formulario conforme tipo selecionado
+- nao salva categoria `todos`; essa opcao fica no filtro visual
 
 APIs consumidas:
 
@@ -94,11 +89,11 @@ Arquivos:
 
 Funcionalidades:
 
-- lista apenas ingredientes em estoque
-- registra entrada, saida ou ajuste
-- permite estoque negativo
+- lista ingredientes em estoque
+- registra `entrada`, `saida` e `ajuste`
+- permite saldo negativo
 - mostra historico de movimentacoes
-- usa popup para informar resultado ou erro
+- usa popup para retorno visual
 
 APIs consumidas:
 
@@ -119,11 +114,21 @@ Arquivos:
 
 Caixa:
 
-- busca caixa aberto
-- abre caixa
+- mostra status do caixa, ID, usuario e data/hora de abertura
+- mostra resumo: valor inicial, vendas, suprimentos, sangrias, despesas e valor
+  esperado
 - registra suprimento e sangria
-- lista movimentos
-- fecha caixa calculando valor esperado e diferenca
+- exibe historico de movimentos com tipo, valor, motivo, data e usuario
+- fecha caixa com:
+  - valor final contado
+  - observacao
+  - previa visual da diferenca
+  - popup de confirmacao e popup de resultado
+
+Regra de calculo:
+
+- a previa no frontend e visual
+- o calculo oficial de `valor_esperado` e `diferenca` e do backend
 
 PDV:
 
@@ -131,11 +136,10 @@ PDV:
 - lista itens do cardapio
 - filtra por categoria
 - adiciona item ao pedido
-- permite informar quantidade em popup
+- permite alterar quantidade em popup
 - calcula total
-- finaliza pedido no backend
-- mostra aviso visual se algum ingrediente ficar negativo
-- nao bloqueia finalizar venda por falta de estoque
+- finaliza pedido no backend (`POST /api/pedidos`)
+- mostra aviso visual se estoque ficar negativo
 
 APIs consumidas:
 
@@ -159,18 +163,70 @@ APIs consumidas:
 - `GET /api/pedidos`
 - `PATCH /api/pedidos/:id/status`
 
-### Cozinha
+### Cozinha (KDS)
 
-Arquivo: `src/components/Cozinha/Cozinha.jsx`
+Arquivos:
 
-- lista pedidos pendentes
-- muda status para `em_preparo`, `pronto` e `entregue`
-- pedido entregue some da lista da cozinha
+- `src/components/Cozinha/Cozinha.jsx`
+- `src/components/Cozinha/Cozinha.css`
+- `src/services/kitchenService.js`
+
+Funcionalidades:
+
+- visual em colunas por status: Novo/Recebido, Em preparo, Pronto, Entregue
+- cards com numero, cliente, tipo/canal, horario, tempo e lista de itens
+- destaque visual por tempo:
+  - 0 a 5 min: normal
+  - 5 a 10 min: atencao
+  - acima de 10 min: atrasado
+- filtros rapidos: Todos, Novos, Em preparo, Prontos
+- botao `Atualizar pedidos`
+- acoes por fluxo:
+  - `novo` -> Iniciar preparo
+  - `em_preparo` -> Marcar pronto
+  - `pronto` -> Entregar
 
 APIs consumidas:
 
 - `GET /api/cozinha/pedidos`
 - `PATCH /api/cozinha/pedidos/:id/status`
+
+### Menu Gerencial
+
+Arquivos:
+
+- `src/components/Gerencial/Gerencial.jsx`
+- `src/components/Gerencial/Gerencial.css`
+
+Acesso:
+
+- link no menu visivel apenas para `admin` e `gerente`
+- acesso direto a `/gerencial` sem permissao mostra tela de acesso restrito
+
+Blocos funcionais:
+
+- Caixa Gerencial (status, resumo, abrir/fechar, movimentos e quanto tem no caixa)
+- Pedidos Gerenciais (correcao de status com rota gerencial)
+- Reimprimir comprovante (nao fiscal, com previa e `window.print`)
+- Relatorio de produtos vendidos por periodo
+- Usuarios (listar/cadastrar/editar/desativar/alterar senha por perfil)
+- Alterar minha senha
+
+APIs consumidas:
+
+- `GET /api/caixa/aberto`
+- `POST /api/caixa/abrir`
+- `POST /api/caixa/fechar`
+- `GET /api/caixa/movimentos`
+- `GET /api/pedidos`
+- `PATCH /api/pedidos/:id/status/gerencial`
+- `GET /api/gerencial/relatorios/produtos-vendidos`
+- `GET /api/usuarios`
+- `POST /api/usuarios`
+- `PUT /api/usuarios/:id`
+- `PATCH /api/usuarios/:id/senha`
+- `DELETE /api/usuarios/:id`
+- `PATCH /api/auth/alterar-senha`
 
 ## Services
 
@@ -181,9 +237,13 @@ Services ativos:
 - `cashService.js`
 - `orderService.js`
 - `kitchenService.js`
+- `userService.js`
+- `reportService.js`
+- `authService.js`
 
-Eles ainda repetem `API_URL`, `getToken` e tratamento de resposta.
-Centralizar isso e uma pendencia tecnica, nao um bloqueio do MVP.
+Pendencia tecnica conhecida:
+
+- centralizar `API_URL`, `getToken` e tratamento comum de resposta.
 
 ## Validacao executada
 
@@ -191,13 +251,22 @@ Comandos executados em `frontend/`:
 
 - `npm run lint`: passou
 - `npm run build`: passou
+- checagem sem uso de `alert/confirm/prompt/window.*`: passou
 
-Tambem foi feito screenshot Playwright da rota `/caixa` com a tela de PDV
-carregando.
+Validacao integrada com backend (smoke de API):
+
+- fluxo principal via `POST /api/pedidos` funcionando
+- fechamento de caixa em cenarios conferido/faltou/sobrou
+- pedido aparecendo na cozinha
+- transicao de status da cozinha ate `entregue`
+- controle de acesso do menu gerencial por perfil
+- usuarios sem token/permissao bloqueados nas rotas sensiveis
+- relatorio gerencial funcionando para admin e gerente
+- correcao gerencial de status funcionando para admin/gerente
 
 ## Pendencias
 
-- Rodar teste manual completo no navegador para todos os fluxos.
+- Rodar checklist manual completo no navegador.
 - Centralizar helper de API.
-- Criar testes automatizados de componentes ou smoke test E2E quando o fluxo
+- Criar testes automatizados de componentes ou smoke E2E quando o fluxo
   estabilizar.

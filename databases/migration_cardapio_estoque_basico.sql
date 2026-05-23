@@ -207,5 +207,12 @@ CALL add_column_if_missing('movimentacoes_estoque', 'unidade_base', '`unidade_ba
 CALL add_column_if_missing('caixa_movimentos', 'forma_pagamento', '`forma_pagamento` VARCHAR(40) NULL AFTER `valor`');
 CALL add_column_if_missing('caixa_movimentos', 'status_pagamento', '`status_pagamento` VARCHAR(40) NULL AFTER `forma_pagamento`');
 
+UPDATE usuarios
+SET nivel_acesso = 'vendedor'
+WHERE nivel_acesso = 'operador';
+
+ALTER TABLE usuarios
+MODIFY COLUMN nivel_acesso ENUM('admin', 'gerente', 'vendedor', 'estoquista', 'cozinha') NOT NULL DEFAULT 'vendedor';
+
 DROP PROCEDURE IF EXISTS add_column_if_missing;
 DROP PROCEDURE IF EXISTS drop_column_if_present;

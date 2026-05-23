@@ -58,6 +58,52 @@ const login = async ({ email, senha, password }) => {
   };
 };
 
+const alterarSenha = async ({ usuario_id, senha_atual, nova_senha }) => {
+  const userId = Number(usuario_id);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    const error = new Error('Usuário autenticado é obrigatório.');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  if (!senha_atual || !nova_senha) {
+    const error = new Error('Senha atual e nova senha são obrigatórias.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (String(nova_senha).length < 6) {
+    const error = new Error('Nova senha deve ter no mínimo 6 caracteres.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const user = await authRepository.findById(userId);
+
+  if (!user || !user.ativo) {
+    const error = new Error('Usuário não encontrado ou inativo.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const senhaConfere = await bcrypt.compare(senha_atual, user.senha_hash);
+
+  if (!senhaConfere) {
+    const error = new Error('Senha atual inválida.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const novoHash = await bcrypt.hash(nova_senha, 10);
+  await authRepository.updatePassword(userId, novoHash);
+
+  return {
+    message: 'Senha alterada com sucesso.',
+  };
+};
+
 module.exports = {
   login,
+  alterarSenha,
 };

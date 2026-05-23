@@ -1,9 +1,9 @@
 # Testes e status - BurgerFlow 2.0
 
-Atualizado em: 2026-05-19.
+Atualizado em: 2026-05-23.
 
 Este documento registra o estado atual do MVP basico: cardapio, estoque,
-pedidos, caixa e PDV.
+pedidos, caixa, PDV, cozinha e menu gerencial.
 
 ## Regra atual de estoque
 
@@ -38,6 +38,15 @@ Depois da venda: -100 gr
 10. Frontend limpa pedido e mostra popup de sucesso.
 11. Se houver estoque negativo, frontend mostra popup de aviso.
 
+## Atualizacao da tela Cardapio
+
+- O botao `Editar` abre o formulario em popup/modal visual.
+- O popup de edicao permite atualizar dados principais, composicao,
+  combo ou promocao conforme o tipo do item.
+- A lista de itens cadastrados tem filtro por texto, tipo, categoria,
+  status e exibicao no cardapio.
+- A opcao `todos` dos filtros fica somente no frontend e nao e salva no banco.
+
 ## Checklist validado por comando ou smoke test
 
 - [x] Schema atual aplicado em MySQL.
@@ -63,6 +72,7 @@ Depois da venda: -100 gr
 - [x] Menu mostra Caixa.
 - [x] Menu mostra Pedidos.
 - [x] Menu mostra Cozinha.
+- [x] Menu mostra Gerencial para perfil `admin` e `gerente`.
 
 ### Cardapio / Cadastrar Item
 
@@ -73,7 +83,8 @@ Depois da venda: -100 gr
 - [x] Cadastrar produto com varios ingredientes.
 - [x] Cadastrar combo com produtos.
 - [x] Cadastrar promocao apontando para produto ou combo.
-- [ ] Editar item em popup.
+- [x] Editar item em popup.
+- [x] Filtrar itens cadastrados por texto, tipo, categoria, status e cardapio.
 - [x] Desativar item em popup.
 - [x] Confirmar que ingrediente nao aparece no cardapio.
 - [x] Confirmar que categoria `todos` nao e salva no banco.
@@ -115,12 +126,22 @@ Depois da venda: -100 gr
 - [x] Cozinha muda para `em_preparo`.
 - [x] Cozinha muda para `pronto`.
 - [x] Cozinha muda para `entregue`.
-- [x] Pedido entregue some da Cozinha.
+- [x] Pedido entregue aparece na coluna `entregue` da Cozinha.
 
-Observacao do teste:
+### Menu Gerencial
 
-- `Editar item em popup` nao foi marcado. A acao `Editar` carrega o item no
-  formulario da propria pagina, nao em um popup/modal.
+- [x] Login admin mostra link `Gerencial`.
+- [x] Login sem permissao nao mostra link `Gerencial`.
+- [x] Acesso direto a `/gerencial` sem permissao mostra acesso restrito.
+- [x] Card `Caixa Gerencial` mostra status e resumo.
+- [x] Card `Pedidos` permite corrigir status com rota gerencial.
+- [x] Card `Reimpressao` mostra previa e permite imprimir comprovante.
+- [x] Card `Produtos vendidos` gera relatorio por periodo.
+- [x] Card `Usuarios` lista usuarios.
+- [x] Admin cadastra usuario.
+- [x] Admin desativa usuario.
+- [x] Gerente nao cadastra usuario (bloqueado).
+- [x] Card `Alterar senha` altera senha propria.
 
 ## Teste minimo de estoque negativo
 
@@ -148,7 +169,7 @@ Evidencia executada em 2026-05-19:
 - Popup exibido no PDV:
   `Venda finalizada com aviso` e aviso de estoque negativo.
 - Cozinha moveu o pedido para `em_preparo`, `pronto` e `entregue`.
-- Pedido entregue sumiu da Cozinha.
+- Pedido entregue ficou visivel na coluna `entregue` da Cozinha.
 - Pedido foi alterado para `cancelado` na tela Pedidos.
 - Caixa foi fechado pela tela com sucesso.
 

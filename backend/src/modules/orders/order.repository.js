@@ -207,6 +207,27 @@ const createCashSaleMovement = async (movimento, connection) => {
   );
 };
 
+const logAudit = async ({ usuario_id, acao, entidade, entidade_id, detalhes }) => {
+  await db.query(
+    `
+    INSERT INTO auditoria (
+      usuario_id,
+      acao,
+      entidade,
+      entidade_id,
+      detalhes
+    ) VALUES (?, ?, ?, ?, ?)
+    `,
+    [
+      usuario_id || null,
+      acao,
+      entidade || null,
+      entidade_id || null,
+      detalhes ? JSON.stringify(detalhes) : null,
+    ]
+  );
+};
+
 module.exports = {
   list,
   getNextNumber,
@@ -216,4 +237,5 @@ module.exports = {
   updateStatus,
   findOpenCash,
   createCashSaleMovement,
+  logAudit,
 };

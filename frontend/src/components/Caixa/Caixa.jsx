@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   buscarCaixaAberto,
   abrirCaixa,
@@ -9,16 +9,66 @@ import {
 import PDV from '../PDV/PDV';
 import './Caixa.css';
 
+const formatarMoeda = (valor) =>
+  Number(valor || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+
+const formatarDataHora = (valor) => {
+  if (!valor) {
+    return '-';
+  }
+
+  return new Date(valor).toLocaleString('pt-BR');
+};
+
+const normalizarValorMonetario = (valor) => {
+  const numero = Number(valor);
+
+  if (!Number.isFinite(numero)) {
+    return null;
+  }
+
+  return Number(numero.toFixed(2));
+};
+
+const getResultadoDiferenca = (diferenca) => {
+  if (diferenca === 0) {
+    return {
+      tipo: 'diferencaZero',
+      mensagem: 'Caixa conferido corretamente.',
+    };
+  }
+
+  if (diferenca < 0) {
+    return {
+      tipo: 'diferencaNegativa',
+      mensagem: `Faltou ${formatarMoeda(Math.abs(diferenca))}.`,
+    };
+  }
+
+  return {
+    tipo: 'diferencaPositiva',
+    mensagem: `Sobrou ${formatarMoeda(diferenca)}.`,
+  };
+};
+
 const Caixa = () => {
-  const [caixaAberto, setCaixaAberto] = useState(null);
+  const [dadosCaixa, setDadosCaixa] = useState({
+    aberto: false,
+    caixa: null,
+    resumo: null,
+    movimentos: [],
+  });
   const [erro, setErro] = useState('');
   const [valorInicial, setValorInicial] = useState('');
+  const [observacaoAbertura, setObservacaoAbertura] = useState('');
   const [valorFinal, setValorFinal] = useState('');
-  const [observacao, setObservacao] = useState('');
+  const [observacaoFechamento, setObservacaoFechamento] = useState('');
   const [tipoMovimento, setTipoMovimento] = useState('suprimento');
   const [valorMovimento, setValorMovimento] = useState('');
   const [motivoMovimento, setMotivoMovimento] = useState('');
-  const [movimentos, setMovimentos] = useState([]);
   const [popup, setPopup] = useState(null);
 
   const abrirPopup = ({
@@ -52,18 +102,19 @@ const Caixa = () => {
     }
   };
 
-  const carregarMovimentos = async () => {
+  const carregarDadosCaixa = async () => {
     try {
-      const data = await listarMovimentosCaixa();
-      setMovimentos(data.movimentos || []);
-    } catch (error) {
-      setErro(error.message);
-    }
-  };
-  const carregarCaixa = async () => {
-    try {
-      const data = await buscarCaixaAberto();
-      setCaixaAberto(data);
+      const [abertoData, movimentosData] = await Promise.all([
+        buscarCaixaAberto(),
+        listarMovimentosCaixa(),
+      ]);
+
+      setDadosCaixa({
+        aberto: Boolean(abertoData?.aberto),
+        caixa: abertoData?.caixa || null,
+        resumo: abertoData?.resumo || movimentosData?.resumo || null,
+        movimentos: movimentosData?.movimentos || abertoData?.movimentos || [],
+      });
       setErro('');
     } catch (error) {
       setErro(error.message);
@@ -73,24 +124,20 @@ const Caixa = () => {
   useEffect(() => {
     let ignorarResposta = false;
 
-    buscarCaixaAberto()
-      .then((data) => {
-        if (!ignorarResposta) {
-          setCaixaAberto(data);
-          setErro('');
+    Promise.all([buscarCaixaAberto(), listarMovimentosCaixa()])
+      .then(([abertoData, movimentosData]) => {
+        if (ignorarResposta) {
+          return;
         }
-      })
-      .catch((error) => {
-        if (!ignorarResposta) {
-          setErro(error.message);
-        }
-      });
 
-    listarMovimentosCaixa()
-      .then((data) => {
-        if (!ignorarResposta) {
-          setMovimentos(data.movimentos || []);
-        }
+        setDadosCaixa({
+          aberto: Boolean(abertoData?.aberto),
+          caixa: abertoData?.caixa || null,
+          resumo: abertoData?.resumo || movimentosData?.resumo || null,
+          movimentos:
+            movimentosData?.movimentos || abertoData?.movimentos || [],
+        });
+        setErro('');
       })
       .catch((error) => {
         if (!ignorarResposta) {
@@ -105,18 +152,26 @@ const Caixa = () => {
 
   const handleAbrirCaixa = async (event) => {
     event.preventDefault();
+    const valorInicialNormalizado = normalizarValorMonetario(valorInicial);
+
+    if (valorInicialNormalizado === null || valorInicialNormalizado < 0) {
+      abrirPopup({
+        tipo: 'erro',
+        titulo: 'Valor inicial inválido',
+        mensagens: 'Informe um valor inicial válido.',
+      });
+      return;
+    }
 
     try {
       await abrirCaixa({
-        valor_inicial: Number(valorInicial || 0),
-        observacao,
+        valor_inicial: valorInicialNormalizado,
+        observacao: observacaoAbertura,
       });
 
       setValorInicial('');
-      setObservacao('');
-      await carregarCaixa();
-      await carregarMovimentos();
-
+      setObservacaoAbertura('');
+      await carregarDadosCaixa();
       abrirPopup({
         tipo: 'sucesso',
         titulo: 'Caixa aberto',
@@ -133,20 +188,40 @@ const Caixa = () => {
   };
 
   const executarFechamentoCaixa = async () => {
+    const valorFinalNormalizado = normalizarValorMonetario(valorFinal);
+
+    if (valorFinalNormalizado === null || valorFinalNormalizado < 0) {
+      abrirPopup({
+        tipo: 'erro',
+        titulo: 'Valor final inválido',
+        mensagens: 'Informe um valor final válido para o fechamento.',
+      });
+      return;
+    }
+
     try {
-      await fecharCaixa({
-        valor_final: Number(valorFinal || 0),
-        observacao,
+      const resultado = await fecharCaixa({
+        valor_final: valorFinalNormalizado,
+        observacao: observacaoFechamento,
       });
 
       setValorFinal('');
-      setObservacao('');
-      await carregarCaixa();
-      await carregarMovimentos();
+      setObservacaoFechamento('');
+      await carregarDadosCaixa();
+
+      const resumo = resultado?.resumo || {};
+      const diferenca = Number(resumo.diferenca || 0);
+      const resultadoDiferenca = resultado?.resultado || getResultadoDiferenca(diferenca);
+
       abrirPopup({
         tipo: 'sucesso',
-        titulo: 'Caixa fechado',
-        mensagens: 'Caixa fechado com sucesso.',
+        titulo: 'Caixa fechado com sucesso',
+        mensagens: [
+          `Valor esperado: ${formatarMoeda(resumo.valor_esperado)}`,
+          `Valor informado: ${formatarMoeda(resumo.valor_final)}`,
+          `Diferença: ${formatarMoeda(diferenca)}`,
+          resultadoDiferenca.mensagem,
+        ],
       });
     } catch (error) {
       setErro(error.message);
@@ -164,18 +239,18 @@ const Caixa = () => {
     abrirPopup({
       tipo: 'confirmacao',
       titulo: 'Fechar caixa',
-      mensagens: 'Deseja fechar o caixa?',
-      textoConfirmar: 'Fechar',
+      mensagens: 'Deseja fechar o caixa com os valores informados?',
+      textoConfirmar: 'Fechar caixa',
       textoCancelar: 'Cancelar',
       onConfirm: executarFechamentoCaixa,
     });
   };
 
-  const existeCaixaAberto = caixaAberto?.aberto;
   const handleRegistrarMovimento = async (event) => {
     event.preventDefault();
+    const valorMovimentoNormalizado = normalizarValorMonetario(valorMovimento);
 
-    if (Number(valorMovimento || 0) <= 0) {
+    if (valorMovimentoNormalizado === null || valorMovimentoNormalizado <= 0) {
       abrirPopup({
         tipo: 'erro',
         titulo: 'Valor inválido',
@@ -187,16 +262,13 @@ const Caixa = () => {
     try {
       await registrarMovimentoCaixa({
         tipo: tipoMovimento,
-        valor: Number(valorMovimento),
+        valor: valorMovimentoNormalizado,
         motivo: motivoMovimento,
       });
 
       setValorMovimento('');
       setMotivoMovimento('');
-
-      await carregarCaixa();
-      await carregarMovimentos();
-
+      await carregarDadosCaixa();
       abrirPopup({
         tipo: 'sucesso',
         titulo: 'Movimentação registrada',
@@ -211,26 +283,26 @@ const Caixa = () => {
       });
     }
   };
-  const totalSuprimentos = movimentos
-    .filter((movimento) => movimento.tipo === 'suprimento')
-    .reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
 
-  const totalVendas = movimentos
-    .filter((movimento) => movimento.tipo === 'venda')
-    .reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
+  const existeCaixaAberto = Boolean(dadosCaixa.aberto && dadosCaixa.caixa);
+  const resumo = dadosCaixa.resumo || {
+    valor_inicial: 0,
+    total_vendas: 0,
+    total_suprimentos: 0,
+    total_sangrias: 0,
+    total_despesas: 0,
+    valor_esperado: 0,
+  };
+  const valorFinalDigitado = normalizarValorMonetario(valorFinal);
+  const diferencaPreview =
+    valorFinalDigitado === null
+      ? 0
+      : Number((valorFinalDigitado - Number(resumo.valor_esperado || 0)).toFixed(2));
+  const resultadoPreview = useMemo(
+    () => getResultadoDiferenca(diferencaPreview),
+    [diferencaPreview]
+  );
 
-  const totalSangrias = movimentos
-    .filter((movimento) => movimento.tipo === 'sangria')
-    .reduce((total, movimento) => total + Number(movimento.valor || 0), 0);
-
-  const valorInicialCaixa = existeCaixaAberto
-    ? Number(caixaAberto.caixa.valor_inicial || 0)
-    : 0;
-
-  const saldoEsperado =
-    valorInicialCaixa + totalVendas + totalSuprimentos - totalSangrias;
-  const diferencaFechamento =
-    valorFinal !== '' ? Number(valorFinal || 0) - saldoEsperado : 0;
   return (
     <div className="caixaPage">
       <header className="caixaHeader">
@@ -241,24 +313,28 @@ const Caixa = () => {
       {erro && <p className="caixaError">{erro}</p>}
 
       <section className="caixaSection">
-        <h2>Status do caixa</h2>
+        <div className="caixaSectionHeader">
+          <h2>Status do caixa</h2>
+          <button type="button" className="btnAtualizarCaixa" onClick={carregarDadosCaixa}>
+            Atualizar
+          </button>
+        </div>
 
         {existeCaixaAberto ? (
-          <div className="caixaInfo">
+          <div className="caixaInfoGrid">
             <p>
               <strong>Status:</strong>{' '}
               <span className="caixaStatusAberto">Aberto</span>
             </p>
             <p>
-              <strong>ID:</strong> {caixaAberto.caixa.id}
+              <strong>ID:</strong> {dadosCaixa.caixa.id}
             </p>
             <p>
-              <strong>Valor inicial:</strong> R${' '}
-              {caixaAberto.caixa.valor_inicial}
+              <strong>Usuário:</strong>{' '}
+              {dadosCaixa.caixa.usuario_nome || `#${dadosCaixa.caixa.usuario_id || '-'}`}
             </p>
             <p>
-              <strong>Aberto em:</strong>{' '}
-              {new Date(caixaAberto.caixa.aberto_em).toLocaleString('pt-BR')}
+              <strong>Aberto em:</strong> {formatarDataHora(dadosCaixa.caixa.aberto_em)}
             </p>
           </div>
         ) : (
@@ -267,6 +343,7 @@ const Caixa = () => {
           </p>
         )}
       </section>
+
       {existeCaixaAberto && (
         <section className="caixaSection">
           <h2>Resumo do caixa</h2>
@@ -274,49 +351,55 @@ const Caixa = () => {
           <div className="caixaResumo">
             <div className="caixaResumoCard">
               <span>Valor inicial</span>
-              <strong>R$ {valorInicialCaixa.toFixed(2)}</strong>
+              <strong>{formatarMoeda(resumo.valor_inicial)}</strong>
             </div>
 
             <div className="caixaResumoCard">
-              <span>Vendas</span>
-              <strong>R$ {totalVendas.toFixed(2)}</strong>
+              <span>Total de vendas</span>
+              <strong>{formatarMoeda(resumo.total_vendas)}</strong>
             </div>
 
             <div className="caixaResumoCard">
-              <span>Suprimentos</span>
-              <strong>R$ {totalSuprimentos.toFixed(2)}</strong>
+              <span>Total de suprimentos</span>
+              <strong>{formatarMoeda(resumo.total_suprimentos)}</strong>
             </div>
 
             <div className="caixaResumoCard">
-              <span>Sangrias</span>
-              <strong>R$ {totalSangrias.toFixed(2)}</strong>
+              <span>Total de sangrias</span>
+              <strong>{formatarMoeda(resumo.total_sangrias)}</strong>
             </div>
 
             <div className="caixaResumoCard">
-              <span>Saldo esperado</span>
-              <strong>R$ {saldoEsperado.toFixed(2)}</strong>
+              <span>Despesas</span>
+              <strong>{formatarMoeda(resumo.total_despesas)}</strong>
+            </div>
+
+            <div className="caixaResumoCard caixaResumoEsperado">
+              <span>Valor esperado</span>
+              <strong>{formatarMoeda(resumo.valor_esperado)}</strong>
             </div>
           </div>
         </section>
       )}
+
       {existeCaixaAberto && (
         <section className="caixaSection">
           <h2>PDV</h2>
 
           <PDV
-            caixaAberto={caixaAberto.caixa}
+            caixaAberto={dadosCaixa.caixa}
             onVendaFinalizada={async () => {
-              await carregarCaixa();
-              await carregarMovimentos();
+              await carregarDadosCaixa();
             }}
           />
         </section>
       )}
+
       {existeCaixaAberto && (
         <section className="caixaSection">
           <h2>Movimentação de caixa</h2>
 
-          <form className="caixaForm" onSubmit={handleRegistrarMovimento}>
+          <form className="caixaForm caixaFormMovimento" onSubmit={handleRegistrarMovimento}>
             <select
               value={tipoMovimento}
               onChange={(event) => setTipoMovimento(event.target.value)}
@@ -327,7 +410,7 @@ const Caixa = () => {
 
             <input
               type="number"
-              placeholder="Valor"
+              placeholder="Valor do movimento"
               value={valorMovimento}
               onChange={(event) => setValorMovimento(event.target.value)}
             />
@@ -345,36 +428,33 @@ const Caixa = () => {
           </form>
         </section>
       )}
+
       {existeCaixaAberto && (
         <section className="caixaSection">
           <h2>Histórico de movimentações</h2>
 
-          {movimentos.length === 0 ? (
+          {dadosCaixa.movimentos.length === 0 ? (
             <p>Nenhuma movimentação registrada.</p>
           ) : (
             <table className="caixaTable">
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Tipo</th>
                   <th>Valor</th>
-                  <th>Pagamento</th>
                   <th>Motivo</th>
                   <th>Data</th>
+                  <th>Usuário</th>
                 </tr>
               </thead>
 
               <tbody>
-                {movimentos.map((movimento) => (
+                {dadosCaixa.movimentos.map((movimento) => (
                   <tr key={movimento.id}>
-                    <td>{movimento.id}</td>
-                    <td>{movimento.tipo}</td>
-                    <td>R$ {movimento.valor}</td>
-                    <td>{movimento.forma_pagamento || '-'}</td>
-                    <td>{movimento.motivo}</td>
-                    <td>
-                      {new Date(movimento.criado_em).toLocaleString('pt-BR')}
-                    </td>
+                    <td className="movimentoTipo">{movimento.tipo}</td>
+                    <td>{formatarMoeda(movimento.valor)}</td>
+                    <td>{movimento.motivo || '-'}</td>
+                    <td>{formatarDataHora(movimento.criado_em)}</td>
+                    <td>{movimento.usuario_nome || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -382,11 +462,12 @@ const Caixa = () => {
           )}
         </section>
       )}
+
       {!existeCaixaAberto && (
         <section className="caixaSection">
           <h2>Abrir caixa</h2>
 
-          <form className="caixaForm" onSubmit={handleAbrirCaixa}>
+          <form className="caixaForm caixaFormAbertura" onSubmit={handleAbrirCaixa}>
             <input
               type="number"
               placeholder="Valor inicial"
@@ -396,9 +477,9 @@ const Caixa = () => {
 
             <input
               type="text"
-              placeholder="Observação"
-              value={observacao}
-              onChange={(event) => setObservacao(event.target.value)}
+              placeholder="Observação de abertura"
+              value={observacaoAbertura}
+              onChange={(event) => setObservacaoAbertura(event.target.value)}
             />
 
             <button type="submit" className="btnAbrirCaixa">
@@ -412,47 +493,40 @@ const Caixa = () => {
         <section className="caixaSection">
           <h2>Fechar caixa</h2>
 
-          <form className="caixaForm" onSubmit={handleFecharCaixa}>
+          <form className="caixaForm caixaFormFechamento" onSubmit={handleFecharCaixa}>
             <input
               type="number"
-              placeholder="Valor final"
+              placeholder="Valor final contado"
               value={valorFinal}
               onChange={(event) => setValorFinal(event.target.value)}
             />
 
             <input
               type="text"
-              placeholder="Observação"
-              value={observacao}
-              onChange={(event) => setObservacao(event.target.value)}
+              placeholder="Observação de fechamento"
+              value={observacaoFechamento}
+              onChange={(event) => setObservacaoFechamento(event.target.value)}
             />
+
             {valorFinal !== '' && (
               <div className="caixaDiferenca">
                 <p>
-                  <strong>Saldo esperado:</strong> R$ {saldoEsperado.toFixed(2)}
+                  <strong>Valor esperado:</strong> {formatarMoeda(resumo.valor_esperado)}
                 </p>
-
                 <p>
-                  <strong>Valor final informado:</strong> R${' '}
-                  {Number(valorFinal || 0).toFixed(2)}
+                  <strong>Valor informado:</strong>{' '}
+                  {valorFinalDigitado === null ? 'Valor inválido' : formatarMoeda(valorFinalDigitado)}
                 </p>
-
                 <p>
                   <strong>Diferença:</strong>{' '}
-                  <span
-                    className={
-                      diferencaFechamento === 0
-                        ? 'diferencaZero'
-                        : diferencaFechamento > 0
-                          ? 'diferencaPositiva'
-                          : 'diferencaNegativa'
-                    }
-                  >
-                    R$ {diferencaFechamento.toFixed(2)}
+                  <span className={resultadoPreview.tipo}>
+                    {formatarMoeda(diferencaPreview)}
                   </span>
                 </p>
+                <p className={resultadoPreview.tipo}>{resultadoPreview.mensagem}</p>
               </div>
             )}
+
             <button type="submit" className="btnFecharCaixa">
               Fechar caixa
             </button>
