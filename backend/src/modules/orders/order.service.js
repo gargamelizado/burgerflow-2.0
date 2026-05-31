@@ -3,7 +3,7 @@ const orderRepository = require('./order.repository');
 const productRepository = require('../products/product.repository');
 const {
   resolverIngredientesDoItem,
-  verificarEstoqueSuficiente,
+  verificarEstoqueNegativo,
   baixarEstoque,
   mergeIngredientes,
 } = require('./orderStock.service');
@@ -137,7 +137,7 @@ const create = async (data) => {
     }
 
     const normalized = await normalizeOrderItems(data.itens, connection);
-    const estoqueMap = await verificarEstoqueSuficiente(
+    const estoqueCheck = await verificarEstoqueNegativo(
       normalized.ingredientes,
       connection
     );
@@ -173,7 +173,7 @@ const create = async (data) => {
       normalized.ingredientes,
       pedidoId,
       connection,
-      estoqueMap
+      estoqueCheck.estoqueMap
     );
 
     await orderRepository.createCashSaleMovement(
@@ -199,7 +199,7 @@ const create = async (data) => {
       pedido,
       itens: normalized.itens,
       ingredientes_baixados: normalized.ingredientes,
-      avisos_estoque: [],
+      avisos_estoque: estoqueCheck.avisos || [],
     };
   } catch (error) {
     await connection.rollback();

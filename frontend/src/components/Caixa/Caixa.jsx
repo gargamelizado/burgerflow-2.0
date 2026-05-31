@@ -27,24 +27,6 @@ const Caixa = () => {
   const [erro, setErro] = useState('');
   const [popup, setPopup] = useState(null);
 
-  const abrirPopup = ({
-    tipo = 'info',
-    titulo = 'Mensagem',
-    mensagens = [],
-    textoConfirmar = 'OK',
-    textoCancelar = '',
-    onConfirm = null,
-  }) => {
-    setPopup({
-      tipo,
-      titulo,
-      mensagens: Array.isArray(mensagens) ? mensagens : [mensagens],
-      textoConfirmar,
-      textoCancelar,
-      onConfirm,
-    });
-  };
-
   const fecharPopup = () => {
     setPopup(null);
   };

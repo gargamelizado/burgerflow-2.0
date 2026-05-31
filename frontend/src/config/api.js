@@ -27,8 +27,8 @@ export const fetchJson = async (url, options) => {
   } catch (error) {
     console.error('Erro de rede ao acessar a API:', error);
     throw new Error(
-      'Não foi possível conectar ao servidor. Verifique se a API está rodando e se o endereço está correto.'
+      'Não foi possível conectar ao servidor. Verifique se a API está rodando e se o endereço está correto.',
+      { cause: error }
     );
   }
 };
-

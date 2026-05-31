@@ -112,7 +112,7 @@ const resolverIngredientesDoItem = async (
   );
 };
 
-const verificarEstoqueSuficiente = async (
+const verificarEstoqueNegativo = async (
   ingredientesNecessarios,
   connection
 ) => {
@@ -120,6 +120,7 @@ const verificarEstoqueSuficiente = async (
     (a, b) => Number(a.ingrediente_id) - Number(b.ingrediente_id)
   );
   const estoqueMap = new Map();
+  const avisos = [];
 
   for (const ingrediente of ingredientesOrdenados) {
     const estoque = await productRepository.findStockByIngredientIdForUpdate(
@@ -148,18 +149,27 @@ const verificarEstoqueSuficiente = async (
       ingrediente.quantidade_necessaria_base
     );
 
-    if (quantidadeNecessaria > disponivel) {
-      const error = new Error(
-        `Estoque insuficiente para ${estoque.ingrediente_nome}. Disponível: ${disponivel} ${estoque.unidade_base}, necessário: ${quantidadeNecessaria} ${estoque.unidade_base}.`
-      );
-      error.statusCode = 409;
-      throw error;
+    const estoqueDepois = disponivel - quantidadeNecessaria;
+
+    if (estoqueDepois < 0) {
+      avisos.push({
+        ingrediente: estoque.ingrediente_nome,
+        estoqueAtual: disponivel,
+        quantidadeNecessaria,
+        estoqueDepois,
+        unidade_base: estoque.unidade_base,
+        message: `Atenção: ${estoque.ingrediente_nome} ficará com estoque negativo: ${estoqueDepois} ${estoque.unidade_base}.`,
+      });
     }
 
     estoqueMap.set(Number(ingrediente.ingrediente_id), estoque);
   }
 
-  return estoqueMap;
+  return {
+    permiteVenda: true,
+    estoqueMap,
+    avisos,
+  };
 };
 
 const baixarEstoque = async (
@@ -181,14 +191,6 @@ const baixarEstoque = async (
       ingrediente.quantidade_necessaria_base
     );
     const quantidadeNova = quantidadeAnterior - quantidadeNecessaria;
-
-    if (quantidadeNova < 0) {
-      const error = new Error(
-        `Estoque insuficiente para ${estoque.ingrediente_nome}.`
-      );
-      error.statusCode = 409;
-      throw error;
-    }
 
     await productRepository.updateStockQuantity(
       ingrediente.ingrediente_id,
@@ -214,7 +216,7 @@ const baixarEstoque = async (
 
 module.exports = {
   resolverIngredientesDoItem,
-  verificarEstoqueSuficiente,
+  verificarEstoqueNegativo,
   baixarEstoque,
   mergeIngredientes,
 };
