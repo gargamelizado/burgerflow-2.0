@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { listarCardapio } from '../../services/productService';
 import { criarPedido } from '../../services/orderService';
+import { autorizarAcaoGerencial } from '../../services/cashService';
 import './PDV.css';
 
 
@@ -14,6 +15,7 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
   const [carregando, setCarregando] = useState(true);
   const [popup, setPopup] = useState(null);
   const [popupQuantidade, setPopupQuantidade] = useState(null);
+  const [popupGerencial, setPopupGerencial] = useState(null);
 
   const abrirPopup = ({
     tipo = 'info',
@@ -158,6 +160,70 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
     setPopupQuantidade(null);
   };
 
+  const abrirPopupGerencial = () => {
+    setPopupGerencial({ identificador: '', senha: '' });
+  };
+
+  const fecharPopupGerencial = () => setPopupGerencial(null);
+
+  const confirmarAutorizacaoGerencial = async () => {
+    if (!popupGerencial) return;
+
+    try {
+      const auth = await autorizarAcaoGerencial({
+        acao: 'estoque.override',
+        identificador: popupGerencial.identificador,
+        senha: popupGerencial.senha,
+        motivo: 'Override estoque PDV',
+        entidade: 'pedidos',
+      });
+
+      const token = auth?.autorizacao?.token;
+
+      if (!token) {
+        throw new Error('Falha ao obter token gerencial.');
+      }
+
+      // Reenviar pedido com token gerencial
+      const resultado = await criarPedido({
+        caixa_id: caixaAberto.id,
+        cliente_nome: 'Cliente',
+        tipo: 'balcao',
+        forma_pagamento: formaPagamento,
+        status_pagamento: 'pago',
+        itens: itensPedido.map((item) => ({
+          item_id: item.id,
+          quantidade: item.quantidade,
+        })),
+        gerencialToken: token,
+      });
+
+      const avisos = resultado.avisos_estoque || [];
+      const mensagens = [resultado.message || 'Pedido finalizado com sucesso.'];
+
+      if (avisos.length > 0) {
+        mensagens.push(...avisos.map((aviso) => aviso.message));
+      }
+
+      fecharPopupGerencial();
+      abrirPopup({
+        tipo: avisos.length > 0 ? 'aviso' : 'sucesso',
+        titulo: avisos.length > 0 ? 'Venda finalizada com aviso' : 'Venda finalizada',
+        mensagens,
+      });
+      setItensPedido([]);
+      setErro('');
+
+      if (onVendaFinalizada) {
+        await onVendaFinalizada();
+      }
+    } catch (error) {
+      fecharPopupGerencial();
+      setErro(error.message);
+      abrirPopup({ tipo: 'erro', titulo: 'Autorização falhou', mensagens: error.message });
+    }
+  };
+
   const editarItem = (produto) => {
     abrirPopup({
       tipo: 'info',
@@ -239,6 +305,12 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
         await onVendaFinalizada();
       }
     } catch (error) {
+      // Se API pedir autorização gerencial para override de estoque, abrir modal
+      if (String(error.message || '').includes('Solicitar autorização gerencial')) {
+        abrirPopupGerencial();
+        return;
+      }
+
       setErro(error.message);
       abrirPopup({
         tipo: 'erro',
@@ -507,6 +579,57 @@ export default function PDV({ caixaAberto, onVendaFinalizada }) {
                 onClick={confirmarQuantidadePersonalizada}
               >
                 Adicionar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {popupGerencial && (
+        <div className="pdvPopupOverlay" role="dialog" aria-modal="true">
+          <div className={`pdvPopup pdvPopup-confirmacao`}>
+            <h3>Autorização Gerencial</h3>
+
+            <div className="pdvPopupMessages">
+              <p>Informe credenciais gerenciais para autorizar venda sem estoque.</p>
+            </div>
+
+            <input
+              className="pdvPopupInput"
+              type="text"
+              placeholder="Gerente (email ou nome)"
+              value={popupGerencial.identificador}
+              onChange={(e) =>
+                setPopupGerencial((c) => ({ ...c, identificador: e.target.value }))
+              }
+              autoFocus
+            />
+
+            <input
+              className="pdvPopupInput"
+              type="password"
+              placeholder="Senha gerencial"
+              value={popupGerencial.senha}
+              onChange={(e) =>
+                setPopupGerencial((c) => ({ ...c, senha: e.target.value }))
+              }
+            />
+
+            <div className="pdvPopupActions">
+              <button
+                type="button"
+                className="pdvPopupCancel"
+                onClick={fecharPopupGerencial}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className="pdvPopupConfirm"
+                onClick={confirmarAutorizacaoGerencial}
+              >
+                Autorizar e Reenviar
               </button>
             </div>
           </div>

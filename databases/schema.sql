@@ -105,21 +105,49 @@ CREATE TABLE IF NOT EXISTS promocoes (
 
 CREATE TABLE IF NOT EXISTS caixas (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  numero INT NULL,
   usuario_id INT NULL,
+  operador_id INT NULL,
   valor_inicial DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  valor_total_vendas DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   valor_final DECIMAL(10,2) NULL,
   valor_esperado DECIMAL(10,2) NULL,
   diferenca DECIMAL(10,2) NULL,
   status ENUM('aberto', 'fechado') NOT NULL DEFAULT 'aberto',
   observacao VARCHAR(255) NULL,
   aberto_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  fechado_em TIMESTAMP NULL
+  data_abertura TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  fechado_em TIMESTAMP NULL,
+  data_fechamento TIMESTAMP NULL,
+  usuario_fechamento_id INT NULL,
+  gerente_autorizador_id INT NULL,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_caixas_numero (numero),
+  KEY idx_caixas_status_numero (status, numero),
+  KEY idx_caixas_usuario_abertura (usuario_id),
+  KEY idx_caixas_operador (operador_id),
+  KEY idx_caixas_usuario_fechamento (usuario_fechamento_id),
+  KEY idx_caixas_gerente_autorizador (gerente_autorizador_id),
+  CONSTRAINT fk_caixas_usuario_abertura
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+    ON DELETE SET NULL,
+  CONSTRAINT fk_caixas_operador
+    FOREIGN KEY (operador_id) REFERENCES usuarios(id)
+    ON DELETE SET NULL,
+  CONSTRAINT fk_caixas_usuario_fechamento
+    FOREIGN KEY (usuario_fechamento_id) REFERENCES usuarios(id)
+    ON DELETE SET NULL,
+  CONSTRAINT fk_caixas_gerente_autorizador
+    FOREIGN KEY (gerente_autorizador_id) REFERENCES usuarios(id)
+    ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS pedidos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   numero INT NOT NULL UNIQUE,
   caixa_id INT NULL,
+  usuario_id INT NULL,
   cliente_nome VARCHAR(100) NULL,
   tipo ENUM('balcao', 'mesa', 'delivery') NOT NULL DEFAULT 'balcao',
   status ENUM('novo', 'em_preparo', 'pronto', 'entregue', 'cancelado') NOT NULL DEFAULT 'novo',
@@ -131,8 +159,12 @@ CREATE TABLE IF NOT EXISTS pedidos (
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   KEY idx_pedidos_caixa (caixa_id),
+  KEY idx_pedidos_usuario (usuario_id),
   CONSTRAINT fk_pedidos_caixa
     FOREIGN KEY (caixa_id) REFERENCES caixas(id)
+    ON DELETE SET NULL,
+  CONSTRAINT fk_pedidos_usuario
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
     ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -183,7 +215,9 @@ CREATE TABLE IF NOT EXISTS caixa_movimentos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   caixa_id INT NOT NULL,
   pedido_id INT NULL,
-  tipo ENUM('suprimento', 'sangria', 'venda') NOT NULL,
+  usuario_id INT NULL,
+  gerente_autorizador_id INT NULL,
+  tipo ENUM('suprimento', 'sangria', 'venda', 'despesa', 'cancelamento') NOT NULL,
   valor DECIMAL(10,2) NOT NULL,
   forma_pagamento VARCHAR(40) NULL,
   status_pagamento VARCHAR(40) NULL,
@@ -191,11 +225,19 @@ CREATE TABLE IF NOT EXISTS caixa_movimentos (
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   KEY idx_caixa_movimentos_caixa (caixa_id),
   KEY idx_caixa_movimentos_pedido (pedido_id),
+  KEY idx_caixa_movimentos_usuario (usuario_id),
+  KEY idx_caixa_movimentos_gerente (gerente_autorizador_id),
   CONSTRAINT fk_caixa_movimentos_caixa
     FOREIGN KEY (caixa_id) REFERENCES caixas(id)
     ON DELETE CASCADE,
   CONSTRAINT fk_caixa_movimentos_pedido
     FOREIGN KEY (pedido_id) REFERENCES pedidos(id)
+    ON DELETE SET NULL,
+  CONSTRAINT fk_caixa_movimentos_usuario
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+    ON DELETE SET NULL,
+  CONSTRAINT fk_caixa_movimentos_gerente
+    FOREIGN KEY (gerente_autorizador_id) REFERENCES usuarios(id)
     ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

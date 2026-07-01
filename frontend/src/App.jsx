@@ -13,9 +13,14 @@ import Caixa from './components/Caixa/Caixa';
 import Cozinha from './components/Cozinha/Cozinha';
 import Gerencial from './components/Gerencial/Gerencial';
 const App = () => {
+  const getAuthFromStorage = () => {
+    const logged = localStorage.getItem('isLoggedIn') === 'true';
+    const token = localStorage.getItem('token');
+    return logged || Boolean(token);
+  };
+
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    const logged = localStorage.getItem('isLoggedIn');
-    return logged === 'true';
+    return getAuthFromStorage();
   });
 
   const handleLogin = () => {
@@ -31,7 +36,9 @@ const App = () => {
   };
 
   const protectedPage = (component) => {
-    return isLoggedIn ? (
+    const authenticated = isLoggedIn || getAuthFromStorage();
+
+    return authenticated ? (
       <MainLayout onLogout={handleLogout}>{component}</MainLayout>
     ) : (
       <Navigate to="/login" />

@@ -45,6 +45,7 @@ Arquivo: `src/components/Login/Login.jsx`
 - envia `POST http://localhost:3006/api/auth/login`
 - salva `token`, `usuario` e `isLoggedIn` no `localStorage`
 - redireciona para `/dashboard`
+- backend expõe `GET http://localhost:3006/api/health` para validação de API antes de autenticar
 
 ### Dashboard
 
@@ -109,21 +110,28 @@ Arquivos:
 - `src/components/Caixa/Caixa.css`
 - `src/components/PDV/PDV.jsx`
 - `src/components/PDV/PDV.css`
+- `src/config/api.js`
 - `src/services/cashService.js`
 - `src/services/orderService.js`
 
 Caixa:
 
 - mostra status do caixa, ID, usuario e data/hora de abertura
-- mostra resumo: valor inicial, vendas, suprimentos, sangrias, despesas e valor
-  esperado
-- registra suprimento e sangria
+- mostra resumo detalhado:
+  - valor inicial
+  - total de vendas
+  - vendas dinheiro
+  - vendas Pix
+  - vendas cartao credito
+  - vendas cartao debito
+  - vendas voucher
+  - suprimentos
+  - sangrias
+  - despesas
+  - valor esperado em dinheiro
 - exibe historico de movimentos com tipo, valor, motivo, data e usuario
-- fecha caixa com:
-  - valor final contado
-  - observacao
-  - previa visual da diferenca
-  - popup de confirmacao e popup de resultado
+- não inclui formulários de abertura/fechamento de caixa ou movimentações manuais
+- o fluxo de autorização gerencial no Caixa foi removido da UI atual
 
 Regra de calculo:
 
@@ -144,10 +152,7 @@ PDV:
 APIs consumidas:
 
 - `GET /api/caixa/aberto`
-- `POST /api/caixa/abrir`
-- `POST /api/caixa/movimento`
 - `GET /api/caixa/movimentos`
-- `POST /api/caixa/fechar`
 - `GET /api/cardapio`
 - `POST /api/pedidos`
 
@@ -243,7 +248,8 @@ Services ativos:
 
 Pendencia tecnica conhecida:
 
-- centralizar `API_URL`, `getToken` e tratamento comum de resposta.
+- centralizacao parcial feita em `src/config/api.js` (adotada no `cashService`);
+  ainda faltam os demais services migrarem para o mesmo helper.
 
 ## Validacao executada
 
@@ -256,10 +262,13 @@ Comandos executados em `frontend/`:
 Validacao integrada com backend (smoke de API):
 
 - fluxo principal via `POST /api/pedidos` funcionando
+- autorizacao gerencial no caixa funcionando com token temporario
 - fechamento de caixa em cenarios conferido/faltou/sobrou
 - pedido aparecendo na cozinha
 - transicao de status da cozinha ate `entregue`
 - controle de acesso do menu gerencial por perfil
+- autorizacao gerencial no caixa funcionando com token temporario
+- fluxo de autorizacao para venda com estoque insuficiente definido como objetivo de UX; hoje a venda continua com aviso de estoque negativo
 - usuarios sem token/permissao bloqueados nas rotas sensiveis
 - relatorio gerencial funcionando para admin e gerente
 - correcao gerencial de status funcionando para admin/gerente

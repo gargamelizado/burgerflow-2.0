@@ -1,2 +1,13 @@
 leiame.md
+
 prioridade.md
+.mysql-data/
+.mysql-run/
+.mysql-logs/
+MELHORIAS_FUTURAS.txt
+test.md
+backend/doc/comentario_backend.md
+backend/doc/mapa-rotas-backend.txt
+doc/comentario_todo.md
+frontend/doc/comentario_frontend.md
+ESTABILIDADE_SISTEMA.txt

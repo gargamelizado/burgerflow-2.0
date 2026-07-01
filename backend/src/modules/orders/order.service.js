@@ -3,10 +3,10 @@ const orderRepository = require('./order.repository');
 const productRepository = require('../products/product.repository');
 const {
   resolverIngredientesDoItem,
-  verificarEstoqueNegativo,
   baixarEstoque,
   mergeIngredientes,
 } = require('./orderStock.service');
+const managementService = require('../management/management.service');
 const { toNumber } = require('../../utils/itemRules');
 
 const statusPermitidos = ['novo', 'em_preparo', 'pronto', 'entregue', 'cancelado'];
@@ -53,7 +53,9 @@ const normalizeOrderItems = async (itens = [], connection) => {
   const ingredientes = [];
 
   for (const itemPedido of itens) {
-    const itemId = Number(itemPedido.item_id || itemPedido.id);
+    const itemId = Number(
+      itemPedido.item_id || itemPedido.produto_id || itemPedido.id
+    );
     const quantidade = toNumber(itemPedido.quantidade);
 
     if (!itemId || quantidade <= 0) {
@@ -90,6 +92,21 @@ const normalizeOrderItems = async (itens = [], connection) => {
 
     ingredientes.push(...ingredientesDoItem);
 
+    let politicaEstoque = item.politica_estoque;
+    if (item.tipo === 'PROMOCAO') {
+      const promocao = await productRepository.findPromotionByItemId(
+        item.id,
+        connection
+      );
+      if (promocao) {
+        const originalItem = await productRepository.findBaseById(
+          promocao.item_original_id,
+          connection
+        );
+        politicaEstoque = originalItem?.politica_estoque || politicaEstoque;
+      }
+    }
+
     normalized.push({
       item_id: item.id,
       item_nome: item.nome,
@@ -99,6 +116,8 @@ const normalizeOrderItems = async (itens = [], connection) => {
       preco_unitario: priceInfo.preco,
       desconto: descontoUnitario * quantidade,
       subtotal,
+      politica_estoque: String(politicaEstoque || 'STRICT').trim().toUpperCase(),
+      ingredientes: ingredientesDoItem,
     });
   }
 
@@ -108,27 +127,155 @@ const normalizeOrderItems = async (itens = [], connection) => {
   };
 };
 
+const validarPoliticaDeEstoque = async (
+  itens,
+  gerencialToken,
+  requesterUserId,
+  connection
+) => {
+  const estoqueMap = new Map();
+  const saldoPorIngrediente = new Map();
+  const shortageItems = [];
+  const avisos = [];
+
+  const findStockForIngredient = async (ingrediente) => {
+    const ingredienteId = Number(ingrediente.ingrediente_id);
+    let estoque = estoqueMap.get(ingredienteId);
+
+    if (!estoque) {
+      estoque = await productRepository.findStockByIngredientIdForUpdate(
+        ingredienteId,
+        connection
+      );
+
+      if (!estoque) {
+        const error = new Error(
+          `Ingrediente ${ingrediente.ingrediente_nome} não possui estoque cadastrado.`
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+
+      if (estoque.unidade_base !== ingrediente.unidade_base) {
+        const error = new Error(
+          `Unidade de estoque incompatível para ${estoque.ingrediente_nome}.`
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+
+      estoqueMap.set(ingredienteId, estoque);
+    }
+
+    return estoque;
+  };
+
+  const avaliarItensPorPolitica = async (politica) => {
+    const itensFiltrados = itens.filter(
+      (item) => item.politica_estoque === politica
+    );
+
+    for (const item of itensFiltrados) {
+      for (const ingrediente of item.ingredientes) {
+        const estoque = await findStockForIngredient(ingrediente);
+        const ingredienteId = Number(ingrediente.ingrediente_id);
+        const quantidadeNecessaria = toNumber(
+          ingrediente.quantidade_necessaria_base
+        );
+        const atual =
+          saldoPorIngrediente.get(ingredienteId) ||
+          toNumber(estoque.quantidade_total_base);
+        const depois = atual - quantidadeNecessaria;
+        saldoPorIngrediente.set(ingredienteId, depois);
+
+        if (depois < 0 && politica === 'STRICT') {
+          const error = new Error('Estoque insuficiente para concluir a venda.');
+          error.statusCode = 409;
+          throw error;
+        }
+
+        if (depois < 0 && politica === 'MANAGER_OVERRIDE') {
+          const aviso = {
+            ingrediente: estoque.ingrediente_nome,
+            estoqueAtual: atual,
+            quantidadeNecessaria,
+            estoqueDepois: depois,
+            unidade_base: estoque.unidade_base,
+            message: `Atenção: ${estoque.ingrediente_nome} ficará com estoque negativo: ${depois} ${estoque.unidade_base}.`,
+          };
+          shortageItems.push({
+            item: item.item_nome,
+            ...aviso,
+          });
+          avisos.push(aviso);
+        }
+      }
+    }
+  };
+
+  await avaliarItensPorPolitica('STRICT');
+  await avaliarItensPorPolitica('MANAGER_OVERRIDE');
+
+  if (shortageItems.length > 0) {
+    if (!gerencialToken) {
+      const error = new Error('Estoque insuficiente. Solicitar autorização gerencial?');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const authorization = await managementService.validateAuthorizationToken({
+      token: gerencialToken,
+      requesterUserId,
+      action: 'estoque.override',
+    });
+
+    return {
+      estoqueMap,
+      managerAuthorization: authorization,
+      avisos,
+    };
+  }
+
+  return {
+    estoqueMap,
+    managerAuthorization: null,
+    avisos: [],
+  };
+};
+
 const create = async (data) => {
   const connection = await db.getConnection();
 
   try {
     await connection.beginTransaction();
 
-    const normalized = await normalizeOrderItems(data.itens, connection);
-    const estoqueNegativo = await verificarEstoqueNegativo(
-      normalized.ingredientes,
-      connection
-    );
-
-    const caixa = data.caixa_id
-      ? { id: Number(data.caixa_id) }
-      : await orderRepository.findOpenCash(connection);
-
-    if (!caixa) {
-      const error = new Error('Abra o caixa antes de finalizar a venda.');
+    const caixaId = Number(data.caixa_id);
+    if (!Number.isInteger(caixaId) || caixaId <= 0) {
+      const error = new Error('caixa_id é obrigatório.');
       error.statusCode = 400;
       throw error;
     }
+
+    const caixa = await orderRepository.findCashById(caixaId, connection);
+    if (!caixa) {
+      const error = new Error('Caixa não encontrado.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (String(caixa.status || '').toLowerCase() !== 'aberto') {
+      const error = new Error('Caixa fechado. Não é possível vender.');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const normalized = await normalizeOrderItems(data.itens, connection);
+    const estoqueCheck = await validarPoliticaDeEstoque(
+      normalized.itens,
+      data.gerencial_token,
+      data.usuario_id,
+      connection
+    );
 
     const numero = await orderRepository.getNextNumber(connection);
     const total = normalized.itens.reduce(
@@ -144,6 +291,7 @@ const create = async (data) => {
       {
         numero,
         caixa_id: caixa.id,
+        usuario_id: data.usuario_id || null,
         cliente_nome: data.cliente_nome || 'Cliente',
         tipo: data.tipo || 'balcao',
         total,
@@ -156,19 +304,30 @@ const create = async (data) => {
     );
 
     await orderRepository.createItems(pedidoId, normalized.itens, connection);
-    await baixarEstoque(normalized.ingredientes, pedidoId, connection);
+    await baixarEstoque(
+      normalized.ingredientes,
+      pedidoId,
+      connection,
+      estoqueCheck.estoqueMap
+    );
 
     await orderRepository.createCashSaleMovement(
       {
-        caixa_id: caixa.id,
+        caixa_id: caixaId,
         pedido_id: pedidoId,
+        usuario_id: data.usuario_id || null,
         valor: total,
         forma_pagamento: data.forma_pagamento || 'dinheiro',
         status_pagamento: data.status_pagamento || 'pago',
-        motivo: `Venda pedido ${numero}`,
+        motivo: estoqueCheck.managerAuthorization
+          ? `Venda autorizada por estoque override gerencial.`
+          : `Venda pedido ${numero}`,
+        gerente_autorizador_id:
+          estoqueCheck.managerAuthorization?.managerUserId || null,
       },
       connection
     );
+    await orderRepository.incrementCashTotalSales(caixaId, total, connection);
 
     await connection.commit();
 
@@ -179,7 +338,8 @@ const create = async (data) => {
       pedido,
       itens: normalized.itens,
       ingredientes_baixados: normalized.ingredientes,
-      avisos_estoque: estoqueNegativo.avisos,
+      autorizacao_gerencial: estoqueCheck.managerAuthorization || null,
+      avisos_estoque: estoqueCheck.avisos || [],
     };
   } catch (error) {
     await connection.rollback();

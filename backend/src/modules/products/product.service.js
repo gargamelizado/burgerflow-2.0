@@ -24,6 +24,12 @@ const normalizeBoolean = (value, fallback) => {
   return Boolean(value);
 };
 
+const normalizeStockPolicy = (value) => {
+  const policy = String(value || 'STRICT').trim().toUpperCase();
+  const validPolicies = ['STRICT', 'MANAGER_OVERRIDE', 'NO_CONTROL'];
+  return validPolicies.includes(policy) ? policy : 'STRICT';
+};
+
 const normalizeBaseItem = (data, forcedType) => {
   ensureRequired(data.nome, 'Nome é obrigatório.');
 
@@ -39,6 +45,7 @@ const normalizeBaseItem = (data, forcedType) => {
       preco_venda: null,
       ativo: normalizeBoolean(data.ativo, true),
       aparece_cardapio: false,
+      politica_estoque: normalizeStockPolicy(data.politica_estoque),
     };
   }
 
@@ -61,6 +68,7 @@ const normalizeBaseItem = (data, forcedType) => {
     preco_venda: precoVenda,
     ativo: normalizeBoolean(data.ativo, true),
     aparece_cardapio: normalizeBoolean(data.aparece_cardapio, true),
+    politica_estoque: normalizeStockPolicy(data.politica_estoque),
   };
 };
 

@@ -1,6 +1,17 @@
 # Comentario geral - BurgerFlow 2.0
 
-Atualizado em: 2026-05-23.
+Atualizado em: 2026-06-04.
+
+Atualização recente:
+- Backend ajustado para usar a instância MySQL local em `127.0.0.1:3306`.
+- Arquivo `backend/.env` sincronizado com credenciais válidas para o usuário
+  `burgerflow`.
+- `backend/src/config/env.js` e `backend/src/config/db.js` atualizados para
+  suportar fallback de conexão socket/host corretamente.
+- Health check `GET /api/health` validado com `200 OK`.
+- Login testado com `admin@estoque.com` / `admin123`.
+- Documentação de estabilidade adicionada em `MELHORIAS_FUTURAS.txt` e
+  `ESTABILIDADE_SISTEMA.txt`.
 
 Este arquivo resume o estado atual do projeto para evitar confusao entre o MVP
 basico implementado agora e planos maiores de ERP/PDV para fases futuras.
@@ -93,17 +104,19 @@ Rotas principais montadas em `backend/src/app.js`:
 - `PUT /api/usuarios/:id`
 - `PATCH /api/usuarios/:id/senha`
 - `DELETE /api/usuarios/:id`
+- `POST /api/gerencial/autorizar`
 - `GET /api/gerencial/relatorios/produtos-vendidos`
 
 O backend usa `PORT=3006` por padrao e banco MySQL `burger_flow_2_0`.
 
 ## Caixa (estado atual do MVP)
 
-Fechamento de caixa completo implementado, com regra oficial no backend.
+Fechamento de caixa e funcao gerencial de caixa implementados com regra oficial
+no backend.
 
 Calculo oficial:
 
-`valor_esperado = valor_inicial + vendas + suprimentos - sangrias - despesas`
+`valor_esperado = valor_inicial + vendas_dinheiro + suprimentos - sangrias - despesas`
 
 `diferenca = valor_final - valor_esperado`
 
@@ -115,6 +128,8 @@ No fechamento, o backend salva:
 - `observacao`
 - `status = fechado`
 - `fechado_em`
+- `usuario_fechamento_id`
+- `gerente_autorizador_id` (quando houver override)
 
 Validacoes ativas:
 
@@ -122,7 +137,26 @@ Validacoes ativas:
 - nao fecha caixa ja fechado
 - nao aceita `valor_final` invalido/NaN
 - nao fecha sem usuario autenticado
+- exige observacao quando `diferenca != 0`
+- vendedor nao fecha caixa sem autorizacao gerencial
+- suprimento/sangria exigem motivo
+- sangria acima do esperado exige autorizacao gerencial para usuario comum
 - retorna erro em JSON
+
+Autorizacao gerencial:
+
+- endpoint `POST /api/gerencial/autorizar`
+- valida gerente/admin por usuario/email + senha
+- gera token temporario (15 minutos)
+- token usado no header `x-gerencial-token`
+- registra auditoria `caixa.autorizacao_gerencial`
+- fluxo desejado para venda com estoque insuficiente:
+  - vendedor tenta vender com falta de ingrediente
+  - sistema abre modal de autorizacao
+  - gerente informa usuario, senha e motivo
+  - backend valida autoriza��o e libera a venda
+  - auditoria registra a acao de override
+- atualmente a venda continua permitida com aviso de estoque negativo
 
 ## Cozinha (estado atual do MVP)
 
@@ -178,8 +212,17 @@ Blocos implementados:
 `databases/migration_cardapio_estoque_basico.sql` existe para atualizar banco
 antigo sem recriar tudo do zero.
 
-Para as melhorias de Caixa e Cozinha desta fase nao foi necessario criar nova
-migration.
+Para a funcao gerencial de caixa foi criada migracao incremental:
+
+- `databases/migration_funcao_gerencial_caixa.sql`
+
+Essa migracao adiciona:
+
+- `caixas.usuario_fechamento_id`
+- `caixas.gerente_autorizador_id`
+- `caixa_movimentos.usuario_id`
+- `caixa_movimentos.gerente_autorizador_id`
+- suporte de tipo para `despesa` e `cancelamento` em `caixa_movimentos.tipo`
 
 Para Menu Gerencial foi aplicada evolucao de perfis em `usuarios.nivel_acesso`:
 
@@ -237,6 +280,9 @@ Evidencias ja executadas nesta fase:
 - `npm run lint` no frontend passou
 - `npm run build` no frontend passou
 - checagem de frontend sem `alert/confirm/prompt/window.*`
+- suite automatizada de funcao gerencial:
+  - `node backend/tests/gerencial-function-tests.mjs`
+  - resumo final: `36 PASS`, `0 FAIL`, `0 SKIP`
 - smoke test de API cobrindo:
   - venda bloqueada com caixa fechado
   - fechamento de caixa: conferido, faltou e sobrou

@@ -1,6 +1,6 @@
 # Comentario do backend - BurgerFlow 2.0
 
-Atualizado em: 2026-05-23.
+Atualizado em: 2026-06-04.
 
 Este backend e uma API Express em CommonJS, com MySQL via `mysql2/promise`,
 autenticacao JWT e senha com bcrypt. O padrao principal continua:
@@ -10,14 +10,25 @@ Route -> Controller -> Service -> Repository -> MySQL.
 Escopo ativo do MVP: cardapio, estoque, pedidos, caixa, cozinha e menu
 gerencial.
 
+Atualizacoes recentes:
+
+- Backend validado com `GET /api/health` e resposta `200 OK`.
+- `backend/.env` ajustado para conectar ao MySQL local em `127.0.0.1:3306`.
+- `src/config/env.js` atualizado para ler `DB_HOST`, `DB_PORT`, `DB_USER`,
+  `DB_PASSWORD`, `DB_NAME` e `DB_SOCKET` com fallback correto.
+- `src/config/db.js` atualizado para suportar conexao por socket ou host/porta
+  e testar a conexao antes de iniciar o servidor.
+- Login testado com `admin@estoque.com` / `admin123`.
+
 ## Entrada da aplicacao
 
 - `src/server.js`: carrega `.env`, importa `app` e escuta em
   `process.env.PORT || 3006`.
 - `src/app.js`: configura `cors`, `express.json`, health check, rotas da API,
   404 e middleware de erro.
-- `src/config/env.js`: define porta, banco e segredo JWT.
-- `src/config/db.js`: cria pool MySQL.
+- `src/config/env.js`: define porta, banco, segredo JWT e opcional socket.
+- `src/config/db.js`: cria pool MySQL com suporte a socket/host e testa a
+  conexao na inicializacao.
 - `src/middlewares/auth.middleware.js`: valida `Authorization: Bearer <token>`.
 - `src/middlewares/error.middleware.js`: devolve erro sempre em JSON.
 
@@ -62,6 +73,8 @@ Arquivo: `src/modules/orders/orderStock.service.js`
 - `mergeIngredientes(ingredientes)`
 
 ## Rotas montadas
+
+- `GET /api/health`
 
 ### Auth
 
@@ -144,14 +157,23 @@ Regras atuais:
 
 - so permite um caixa aberto
 - abertura exige usuario autenticado
+- vendedor sem permissao precisa de override gerencial temporario
 - movimento manual aceita `suprimento` e `sangria`
+- suprimento e sangria exigem motivo
+- sangria acima do valor esperado exige override gerencial para usuario comum
 - venda de PDV entra como movimento `venda` via `POST /api/pedidos`
 - fechamento oficial e calculado no backend:
-  - `valor_esperado = valor_inicial + vendas + suprimentos - sangrias - despesas`
+  - `valor_esperado = valor_inicial + vendas_dinheiro + suprimentos - sangrias - despesas`
   - `diferenca = valor_final - valor_esperado`
+- `pix`, `cartao_credito`, `cartao_debito` e `voucher` nao entram no dinheiro fisico
+- fechamento com diferenca exige observacao
 - fechamento salva `valor_final`, `valor_esperado`, `diferenca`, `observacao`,
-  `status=fechado` e `fechado_em`
+  `status=fechado`, `fechado_em`, `usuario_fechamento_id` e
+  `gerente_autorizador_id` quando houver override
 - retorno inclui resumo e resultado: `conferido`, `faltou` ou `sobrou`
+- auditoria de caixa:
+  `caixa.aberto`, `caixa.fechado`, `caixa.suprimento`, `caixa.sangria`,
+  `caixa.autorizacao_gerencial`, `caixa.fechamento_com_diferenca`
 
 ### Pedidos
 
@@ -204,11 +226,20 @@ Regras:
 
 ### Relatorios Gerenciais
 
+- `POST /api/gerencial/autorizar`
 - `GET /api/gerencial/relatorios/produtos-vendidos?data_inicio=YYYY-MM-DD&data_fim=YYYY-MM-DD`
 
 Regras:
 
 - exige autenticacao
+- `POST /api/gerencial/autorizar` valida credenciais de `admin`/`gerente`
+  e retorna token temporario de override (15 minutos)
+- fluxo desejado para venda com estoque insuficiente:
+  - vendedor tenta vender
+  - sistema detecta estoque insuficiente e abre modal de autorizacao
+  - gerente informa usuario, senha e motivo
+  - backend valida autoriza��o e retorna `x-gerencial-token`
+  - venda e liberada e auditoria registra `caixa.autorizacao_gerencial`
 - exige perfil `admin` ou `gerente`
 - agrega `pedido_itens` por item no periodo
 - ignora pedidos `cancelado`
@@ -233,6 +264,14 @@ Regras:
 
 `databases/migration_cardapio_estoque_basico.sql` continua sendo a migracao
 incremental para banco antigo.
+
+`databases/migration_funcao_gerencial_caixa.sql` adiciona:
+
+- `caixas.usuario_fechamento_id`
+- `caixas.gerente_autorizador_id`
+- `caixa_movimentos.usuario_id`
+- `caixa_movimentos.gerente_autorizador_id`
+- suporte de `despesa` e `cancelamento` em `caixa_movimentos.tipo`
 
 Para esta fase foi adicionada evolucao incremental de perfil em `usuarios`:
 
@@ -263,7 +302,12 @@ Validacoes ja executadas nesta fase:
 - `npm run lint` em `frontend/`
 - `npm run build` em `frontend/`
 - checagem sem `alert/confirm/prompt/window.*` no frontend
+- suite `backend/tests/gerencial-function-tests.mjs` com 36/36 PASS
 - smoke de API cobrindo:
+  - `POST /api/gerencial/autorizar`
+  - abertura/fechamento/suprimento/sangria com e sem override gerencial
+  - auditoria de acoes gerenciais
+  - dinheiro fisico separado de pix/cartoes
   - venda bloqueada com caixa fechado
   - fechamento de caixa em 3 cenarios (conferido, faltou, sobrou)
   - fluxo principal com `POST /api/pedidos`

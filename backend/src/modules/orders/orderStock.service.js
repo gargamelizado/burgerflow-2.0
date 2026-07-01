@@ -112,68 +112,34 @@ const resolverIngredientesDoItem = async (
   );
 };
 
-const verificarEstoqueNegativo = async (
-  ingredientesNecessarios,
-  connection
-) => {
-  const avisos = [];
-
-  for (const ingrediente of ingredientesNecessarios) {
-    const estoque = await productRepository.findStockByIngredientId(
-      ingrediente.ingrediente_id,
-      connection
-    );
-
-    if (!estoque) {
-      const error = new Error(
-        `Ingrediente ${ingrediente.ingrediente_nome} não possui estoque.`
-      );
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (estoque.unidade_base !== ingrediente.unidade_base) {
-      const error = new Error(
-        `Unidade de estoque incompatível para ${estoque.ingrediente_nome}.`
-      );
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const disponivel = toNumber(estoque.quantidade_total_base);
-    const quantidadeNecessaria = toNumber(
-      ingrediente.quantidade_necessaria_base
-    );
-    const estoqueDepois = disponivel - quantidadeNecessaria;
-
-    if (estoqueDepois < 0) {
-      avisos.push({
-        ingrediente_id: ingrediente.ingrediente_id,
-        ingrediente: estoque.ingrediente_nome,
-        estoqueAtual: disponivel,
-        quantidadeNecessaria,
-        estoqueDepois,
-        unidade_base: estoque.unidade_base,
-        message: `Atenção: ${estoque.ingrediente_nome} ficará com estoque negativo: ${estoqueDepois} ${estoque.unidade_base}`,
-      });
-    }
-  }
-
+// Legacy checker removed; policy enforcement moved to order.service
+const verificarEstoqueNegativo = async (_ingredientesNecessarios, _connection) => {
   return {
     permiteVenda: true,
-    avisos,
+    estoqueMap: new Map(),
+    avisos: [],
   };
 };
 
-const baixarEstoque = async (ingredientesNecessarios, pedidoId, connection) => {
+const baixarEstoque = async (
+  ingredientesNecessarios,
+  pedidoId,
+  connection,
+  estoqueMap = null
+) => {
   for (const ingrediente of ingredientesNecessarios) {
-    const estoque = await productRepository.findStockByIngredientId(
-      ingrediente.ingrediente_id,
-      connection
-    );
+    const estoque =
+      estoqueMap?.get(Number(ingrediente.ingrediente_id)) ||
+      (await productRepository.findStockByIngredientIdForUpdate(
+        ingrediente.ingrediente_id,
+        connection
+      ));
+
     const quantidadeAnterior = toNumber(estoque.quantidade_total_base);
-    const quantidadeNova =
-      quantidadeAnterior - toNumber(ingrediente.quantidade_necessaria_base);
+    const quantidadeNecessaria = toNumber(
+      ingrediente.quantidade_necessaria_base
+    );
+    const quantidadeNova = quantidadeAnterior - quantidadeNecessaria;
 
     await productRepository.updateStockQuantity(
       ingrediente.ingrediente_id,
@@ -186,7 +152,7 @@ const baixarEstoque = async (ingredientesNecessarios, pedidoId, connection) => {
         ingrediente_id: ingrediente.ingrediente_id,
         pedido_id: pedidoId,
         tipo: 'venda',
-        quantidade: ingrediente.quantidade_necessaria_base,
+        quantidade: quantidadeNecessaria,
         unidade_base: ingrediente.unidade_base,
         quantidade_anterior: quantidadeAnterior,
         quantidade_nova: quantidadeNova,

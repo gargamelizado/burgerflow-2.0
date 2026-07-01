@@ -1,0 +1,205 @@
+{
+  "generated_at": "2026-06-04T00:20:17.765Z",
+  "base_url": "http://127.0.0.1:3006/api",
+  "started_at": "2026-06-04T00:20:17.695Z",
+  "summary": {
+    "total": 32,
+    "PASS": 1,
+    "FAIL": 31,
+    "SKIP": 0
+  },
+  "results": [
+    {
+      "id": "SETUP-01",
+      "title": "Login admin",
+      "status": "FAIL",
+      "details": "Login falhou para admin@estoque.com: HTTP 500"
+    },
+    {
+      "id": "SETUP-02",
+      "title": "Criar usuarios de teste (gerente e vendedor)",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "SETUP-03",
+      "title": "Fechar caixas abertos anteriores",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "SETUP-04",
+      "title": "Criar catalogo deterministico para venda/estoque",
+      "status": "FAIL",
+      "details": "Access denied for user 'root'@'localhost'"
+    },
+    {
+      "id": "T1",
+      "title": "Gerente abre caixa com sucesso",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T2",
+      "title": "Multi-caixa: abrir caixas 2, 3 e 4",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T3",
+      "title": "Nao permitir abrir o mesmo numero de caixa ja aberto",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T4",
+      "title": "Vendedor sem permissao nao abre caixa sem override",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T5",
+      "title": "Vendedor abre caixa com autorizacao gerencial",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T6",
+      "title": "Pedido sem caixa_id deve falhar",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T7",
+      "title": "Pedido em caixa fechado deve falhar",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T8",
+      "title": "Venda em caixa aberto com caixa_id obrigatorio",
+      "status": "FAIL",
+      "details": "Access denied for user 'root'@'localhost'"
+    },
+    {
+      "id": "T9",
+      "title": "Pedido da venda aparece na cozinha",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T10",
+      "title": "Vendas por caixa mostram apenas vendas do proprio caixa",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T11",
+      "title": "Movimento de caixa tipo venda e pedidos listam a venda",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T12",
+      "title": "Resumo do caixa soma venda em dinheiro no valor esperado",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T13",
+      "title": "Venda pix nao altera dinheiro fisico esperado",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T14",
+      "title": "Venda cartao credito nao altera dinheiro fisico esperado",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T15",
+      "title": "Venda em dinheiro altera dinheiro fisico esperado",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T16",
+      "title": "Suprimento com motivo aumenta valor esperado",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T17",
+      "title": "Suprimento sem motivo deve falhar",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T18",
+      "title": "Sangria com motivo reduz valor esperado",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T19",
+      "title": "Sangria acima do esperado por vendedor sem autorizacao falha",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T20",
+      "title": "Sangria acima do esperado por vendedor com autorizacao funciona",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T21",
+      "title": "Fechamento com diferenca sem observacao deve falhar",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T22",
+      "title": "Fechamento do caixa correto com diferenca e observacao",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T23",
+      "title": "Vendedor nao fecha caixa sem autorizacao gerencial",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T24",
+      "title": "Vendedor fecha caixa com autorizacao gerencial",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T25",
+      "title": "Fechar um caixa nao bloqueia venda nos outros caixas abertos",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    },
+    {
+      "id": "T26",
+      "title": "Auditoria das acoes gerenciais obrigatorias",
+      "status": "FAIL",
+      "details": "Access denied for user 'root'@'localhost'"
+    },
+    {
+      "id": "T27",
+      "title": "Erros retornam JSON e nao HTML",
+      "status": "PASS",
+      "details": "validacao de erros JSON ok"
+    },
+    {
+      "id": "CLEANUP",
+      "title": "Fechar caixas e desativar usuarios/itens de teste",
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
+    }
+  ]
+}

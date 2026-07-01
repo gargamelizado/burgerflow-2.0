@@ -1,0 +1,16 @@
+# Maven
+/target
+!.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse
+.settings/
+
+# IntelliJ
+/.idea
+*.iml
+
+# Logs
+*.log
+
+# OS
+.DS_Store

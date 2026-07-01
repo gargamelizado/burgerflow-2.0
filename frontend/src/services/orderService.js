@@ -33,12 +33,18 @@ export const listarPedidos = async () => {
 };
 
 export const criarPedido = async (pedido) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${getToken()}`,
+  };
+
+  if (pedido.gerencialToken) {
+    headers['x-gerencial-token'] = pedido.gerencialToken;
+  }
+
   const response = await fetch(`${API_URL}/pedidos`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
-    },
+    headers,
     body: JSON.stringify(pedido),
   });
 
