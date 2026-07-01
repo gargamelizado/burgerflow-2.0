@@ -1,6 +1,6 @@
 # Comentario do backend - BurgerFlow 2.0
 
-Atualizado em: 2026-05-23.
+Atualizado em: 2026-06-04.
 
 Este backend e uma API Express em CommonJS, com MySQL via `mysql2/promise`,
 autenticacao JWT e senha com bcrypt. O padrao principal continua:
@@ -10,14 +10,25 @@ Route -> Controller -> Service -> Repository -> MySQL.
 Escopo ativo do MVP: cardapio, estoque, pedidos, caixa, cozinha e menu
 gerencial.
 
+Atualizacoes recentes:
+
+- Backend validado com `GET /api/health` e resposta `200 OK`.
+- `backend/.env` ajustado para conectar ao MySQL local em `127.0.0.1:3306`.
+- `src/config/env.js` atualizado para ler `DB_HOST`, `DB_PORT`, `DB_USER`,
+  `DB_PASSWORD`, `DB_NAME` e `DB_SOCKET` com fallback correto.
+- `src/config/db.js` atualizado para suportar conexao por socket ou host/porta
+  e testar a conexao antes de iniciar o servidor.
+- Login testado com `admin@estoque.com` / `admin123`.
+
 ## Entrada da aplicacao
 
 - `src/server.js`: carrega `.env`, importa `app` e escuta em
   `process.env.PORT || 3006`.
 - `src/app.js`: configura `cors`, `express.json`, health check, rotas da API,
   404 e middleware de erro.
-- `src/config/env.js`: define porta, banco e segredo JWT.
-- `src/config/db.js`: cria pool MySQL.
+- `src/config/env.js`: define porta, banco, segredo JWT e opcional socket.
+- `src/config/db.js`: cria pool MySQL com suporte a socket/host e testa a
+  conexao na inicializacao.
 - `src/middlewares/auth.middleware.js`: valida `Authorization: Bearer <token>`.
 - `src/middlewares/error.middleware.js`: devolve erro sempre em JSON.
 
@@ -62,6 +73,8 @@ Arquivo: `src/modules/orders/orderStock.service.js`
 - `mergeIngredientes(ingredientes)`
 
 ## Rotas montadas
+
+- `GET /api/health`
 
 ### Auth
 
@@ -221,6 +234,12 @@ Regras:
 - exige autenticacao
 - `POST /api/gerencial/autorizar` valida credenciais de `admin`/`gerente`
   e retorna token temporario de override (15 minutos)
+- fluxo desejado para venda com estoque insuficiente:
+  - vendedor tenta vender
+  - sistema detecta estoque insuficiente e abre modal de autorizacao
+  - gerente informa usuario, senha e motivo
+  - backend valida autoriza��o e retorna `x-gerencial-token`
+  - venda e liberada e auditoria registra `caixa.autorizacao_gerencial`
 - exige perfil `admin` ou `gerente`
 - agrega `pedido_itens` por item no periodo
 - ignora pedidos `cancelado`

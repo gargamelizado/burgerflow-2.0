@@ -1,193 +1,193 @@
 {
-  "generated_at": "2026-05-31T20:38:15.909Z",
+  "generated_at": "2026-06-04T00:20:17.765Z",
   "base_url": "http://127.0.0.1:3006/api",
-  "started_at": "2026-05-31T20:38:15.037Z",
+  "started_at": "2026-06-04T00:20:17.695Z",
   "summary": {
     "total": 32,
-    "PASS": 32,
-    "FAIL": 0,
+    "PASS": 1,
+    "FAIL": 31,
     "SKIP": 0
   },
   "results": [
     {
       "id": "SETUP-01",
       "title": "Login admin",
-      "status": "PASS",
-      "details": "admin#1 autenticado"
+      "status": "FAIL",
+      "details": "Login falhou para admin@estoque.com: HTTP 500"
     },
     {
       "id": "SETUP-02",
       "title": "Criar usuarios de teste (gerente e vendedor)",
-      "status": "PASS",
-      "details": "manager#23 e seller#24 criados"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "SETUP-03",
       "title": "Fechar caixas abertos anteriores",
-      "status": "PASS",
-      "details": "cleanup de caixas aberto concluido"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "SETUP-04",
       "title": "Criar catalogo deterministico para venda/estoque",
-      "status": "PASS",
-      "details": "produto#227 ingrediente#226"
+      "status": "FAIL",
+      "details": "Access denied for user 'root'@'localhost'"
     },
     {
       "id": "T1",
       "title": "Gerente abre caixa com sucesso",
-      "status": "PASS",
-      "details": "caixa#176 aberto"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T2",
       "title": "Multi-caixa: abrir caixas 2, 3 e 4",
-      "status": "PASS",
-      "details": "abertos: 1, 2, 3, 4"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T3",
       "title": "Nao permitir abrir o mesmo numero de caixa ja aberto",
-      "status": "PASS",
-      "details": "bloqueou duplicidade de numero"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T4",
       "title": "Vendedor sem permissao nao abre caixa sem override",
-      "status": "PASS",
-      "details": "bloqueado corretamente"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T5",
       "title": "Vendedor abre caixa com autorizacao gerencial",
-      "status": "PASS",
-      "details": "caixa vendedor#180 aberto"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T6",
       "title": "Pedido sem caixa_id deve falhar",
-      "status": "PASS",
-      "details": "caixa_id é obrigatório."
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T7",
       "title": "Pedido em caixa fechado deve falhar",
-      "status": "PASS",
-      "details": "venda bloqueada em caixa fechado"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T8",
       "title": "Venda em caixa aberto com caixa_id obrigatorio",
-      "status": "PASS",
-      "details": "pedido#138 criado com baixa de estoque"
+      "status": "FAIL",
+      "details": "Access denied for user 'root'@'localhost'"
     },
     {
       "id": "T9",
       "title": "Pedido da venda aparece na cozinha",
-      "status": "PASS",
-      "details": "pedido#138 visivel na cozinha"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T10",
       "title": "Vendas por caixa mostram apenas vendas do proprio caixa",
-      "status": "PASS",
-      "details": "caixa#176 listou apenas suas vendas"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T11",
       "title": "Movimento de caixa tipo venda e pedidos listam a venda",
-      "status": "PASS",
-      "details": "pedido e movimento de venda confirmados"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T12",
       "title": "Resumo do caixa soma venda em dinheiro no valor esperado",
-      "status": "PASS",
-      "details": "resumo caixa#176 ok"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T13",
       "title": "Venda pix nao altera dinheiro fisico esperado",
-      "status": "PASS",
-      "details": "pix nao alterou dinheiro fisico"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T14",
       "title": "Venda cartao credito nao altera dinheiro fisico esperado",
-      "status": "PASS",
-      "details": "cartao nao alterou dinheiro fisico"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T15",
       "title": "Venda em dinheiro altera dinheiro fisico esperado",
-      "status": "PASS",
-      "details": "dinheiro alterou fisico corretamente"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T16",
       "title": "Suprimento com motivo aumenta valor esperado",
-      "status": "PASS",
-      "details": "suprimento aplicado"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T17",
       "title": "Suprimento sem motivo deve falhar",
-      "status": "PASS",
-      "details": "bloqueou suprimento sem motivo"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T18",
       "title": "Sangria com motivo reduz valor esperado",
-      "status": "PASS",
-      "details": "sangria aplicada"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T19",
       "title": "Sangria acima do esperado por vendedor sem autorizacao falha",
-      "status": "PASS",
-      "details": "bloqueou sangria 300 sem override"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T20",
       "title": "Sangria acima do esperado por vendedor com autorizacao funciona",
-      "status": "PASS",
-      "details": "sangria autorizada 250 registrada"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T21",
       "title": "Fechamento com diferenca sem observacao deve falhar",
-      "status": "PASS",
-      "details": "bloqueou fechamento sem observacao"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T22",
       "title": "Fechamento do caixa correto com diferenca e observacao",
-      "status": "PASS",
-      "details": "caixa#176 fechado com diferenca -10"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T23",
       "title": "Vendedor nao fecha caixa sem autorizacao gerencial",
-      "status": "PASS",
-      "details": "bloqueou fechamento sem override"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T24",
       "title": "Vendedor fecha caixa com autorizacao gerencial",
-      "status": "PASS",
-      "details": "caixa#178 fechado por vendedor autorizado"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T25",
       "title": "Fechar um caixa nao bloqueia venda nos outros caixas abertos",
-      "status": "PASS",
-      "details": "caixa aberto continuou vendendo (pedido#142)"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     },
     {
       "id": "T26",
       "title": "Auditoria das acoes gerenciais obrigatorias",
-      "status": "PASS",
-      "details": "{\"caixa.aberto\":127,\"caixa.fechado\":125,\"caixa.suprimento\":13,\"caixa.sangria\":19,\"caixa.autorizacao_gerencial\":41,\"caixa.fechamento_com_diferenca\":25}"
+      "status": "FAIL",
+      "details": "Access denied for user 'root'@'localhost'"
     },
     {
       "id": "T27",
@@ -198,8 +198,8 @@
     {
       "id": "CLEANUP",
       "title": "Fechar caixas e desativar usuarios/itens de teste",
-      "status": "PASS",
-      "details": "cleanup concluido"
+      "status": "FAIL",
+      "details": "Cannot read properties of null (reading 'token')"
     }
   ]
 }

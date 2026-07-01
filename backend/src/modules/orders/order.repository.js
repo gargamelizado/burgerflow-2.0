@@ -219,8 +219,9 @@ const createCashSaleMovement = async (movimento, connection) => {
       valor,
       forma_pagamento,
       status_pagamento,
-      motivo
-    ) VALUES (?, ?, ?, 'venda', ?, ?, ?, ?)
+      motivo,
+      gerente_autorizador_id
+    ) VALUES (?, ?, ?, 'venda', ?, ?, ?, ?, ?)
     `,
     [
       movimento.caixa_id,
@@ -230,6 +231,7 @@ const createCashSaleMovement = async (movimento, connection) => {
       movimento.forma_pagamento,
       movimento.status_pagamento,
       movimento.motivo,
+      movimento.gerente_autorizador_id || null,
     ]
   );
 };
@@ -246,8 +248,11 @@ const incrementCashTotalSales = async (caixaId, valor, connection) => {
   );
 };
 
-const logAudit = async ({ usuario_id, acao, entidade, entidade_id, detalhes }) => {
-  await db.query(
+const logAudit = async (
+  { usuario_id, acao, entidade, entidade_id, detalhes },
+  connection
+) => {
+  await executor(connection).query(
     `
     INSERT INTO auditoria (
       usuario_id,

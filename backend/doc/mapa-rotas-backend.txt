@@ -1,5 +1,5 @@
 Mapa de rotas do backend ativo - BurgerFlow 2.0
-Atualizado em: 2026-05-23
+Atualizado em: 2026-06-04
 
 Health
 - GET /api/health

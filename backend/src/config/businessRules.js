@@ -36,6 +36,7 @@ const gerencialActions = [
   'registrar_suprimento',
   'cancelar_venda',
   'autorizar_desconto',
+  'estoque.override',
 ];
 
 const normalizeRole = (role) => String(role || '').trim().toLowerCase();

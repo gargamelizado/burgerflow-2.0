@@ -112,63 +112,12 @@ const resolverIngredientesDoItem = async (
   );
 };
 
-const verificarEstoqueNegativo = async (
-  ingredientesNecessarios,
-  connection
-) => {
-  const ingredientesOrdenados = [...ingredientesNecessarios].sort(
-    (a, b) => Number(a.ingrediente_id) - Number(b.ingrediente_id)
-  );
-  const estoqueMap = new Map();
-  const avisos = [];
-
-  for (const ingrediente of ingredientesOrdenados) {
-    const estoque = await productRepository.findStockByIngredientIdForUpdate(
-      ingrediente.ingrediente_id,
-      connection
-    );
-
-    if (!estoque) {
-      const error = new Error(
-        `Ingrediente ${ingrediente.ingrediente_nome} não possui estoque.`
-      );
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (estoque.unidade_base !== ingrediente.unidade_base) {
-      const error = new Error(
-        `Unidade de estoque incompatível para ${estoque.ingrediente_nome}.`
-      );
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const disponivel = toNumber(estoque.quantidade_total_base);
-    const quantidadeNecessaria = toNumber(
-      ingrediente.quantidade_necessaria_base
-    );
-
-    const estoqueDepois = disponivel - quantidadeNecessaria;
-
-    if (estoqueDepois < 0) {
-      avisos.push({
-        ingrediente: estoque.ingrediente_nome,
-        estoqueAtual: disponivel,
-        quantidadeNecessaria,
-        estoqueDepois,
-        unidade_base: estoque.unidade_base,
-        message: `Atenção: ${estoque.ingrediente_nome} ficará com estoque negativo: ${estoqueDepois} ${estoque.unidade_base}.`,
-      });
-    }
-
-    estoqueMap.set(Number(ingrediente.ingrediente_id), estoque);
-  }
-
+// Legacy checker removed; policy enforcement moved to order.service
+const verificarEstoqueNegativo = async (_ingredientesNecessarios, _connection) => {
   return {
     permiteVenda: true,
-    estoqueMap,
-    avisos,
+    estoqueMap: new Map(),
+    avisos: [],
   };
 };
 

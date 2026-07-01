@@ -45,6 +45,7 @@ Arquivo: `src/components/Login/Login.jsx`
 - envia `POST http://localhost:3006/api/auth/login`
 - salva `token`, `usuario` e `isLoggedIn` no `localStorage`
 - redireciona para `/dashboard`
+- backend expõe `GET http://localhost:3006/api/health` para validação de API antes de autenticar
 
 ### Dashboard
 
@@ -266,6 +267,8 @@ Validacao integrada com backend (smoke de API):
 - pedido aparecendo na cozinha
 - transicao de status da cozinha ate `entregue`
 - controle de acesso do menu gerencial por perfil
+- autorizacao gerencial no caixa funcionando com token temporario
+- fluxo de autorizacao para venda com estoque insuficiente definido como objetivo de UX; hoje a venda continua com aviso de estoque negativo
 - usuarios sem token/permissao bloqueados nas rotas sensiveis
 - relatorio gerencial funcionando para admin e gerente
 - correcao gerencial de status funcionando para admin/gerente

@@ -1,9 +1,236 @@
 # Testes e status - BurgerFlow 2.0
 
-Atualizado em: 2026-05-23.
+Atualizado em: 2026-06-03.
 
 Este documento registra o estado atual do MVP basico: cardapio, estoque,
-pedidos, caixa, PDV, cozinha e menu gerencial.
+pedidos, caixa, PDV, cozinha, usuarios e menu gerencial.
+
+## Resultado da rodada de validacao - 2026-06-03
+
+Status usado abaixo:
+
+- `PASS`: validado por comando nesta rodada.
+- `CODIGO`: existe rota/tela/fluxo no codigo, mas nao foi confirmado em banco
+  nesta rodada.
+- `BLOQUEADO`: depende do MySQL local corrigido.
+- `FORA DO MVP`: contradiz a regra atual do MVP documentada neste repo.
+- `PENDENTE`: nao encontrado ou nao implementado de forma completa.
+
+Validacoes executadas:
+
+- [x] `find backend/src -name '*.js' -exec node --check {} \;` -> PASS.
+- [x] `npm run lint --prefix frontend` -> PASS.
+- [x] `npm run build --prefix frontend` -> PASS.
+- [x] `GET /api/health` com backend local na porta `3006` -> PASS.
+- [ ] Login/API funcional -> BLOQUEADO. `POST /api/auth/login` retornou
+  `500` com `Access denied for user 'root'@'localhost'`.
+- [ ] Suite `backend/tests/gerencial-function-tests.mjs` -> BLOQUEADO pelo
+  mesmo acesso ao MySQL. Resultado da tentativa: 32 testes, 1 PASS, 31 FAIL;
+  o unico PASS foi a validacao de erro JSON.
+
+Observacao importante: o checklist amplo abaixo inclui itens que nao pertencem
+ao MVP atual. Nesta fase, o projeto documenta que estoque negativo e permitido,
+nao ha `estoque_minimo`, nao ha alerta de estoque baixo, nao ha custo/lucro real
+e ingrediente e o unico item que controla estoque.
+
+## Checklist funcional amplo - recebido em 2026-06-03
+
+### Cardapio
+
+Cadastro de Produto:
+
+- [ ] Criar produto - CODIGO, precisa reteste com MySQL.
+- [ ] Editar produto - CODIGO, formulario abre em modal/popup.
+- [ ] Excluir produto - CODIGO parcial: backend desativa; nao remove fisicamente.
+- [ ] Ativar produto - CODIGO via campo `Ativo` no formulario de edicao.
+- [ ] Desativar produto - CODIGO via botao `Desativar`.
+- [ ] Adicionar imagem - PENDENTE, nao ha campo/upload de imagem no item.
+- [ ] Definir preco - CODIGO via `preco_venda`.
+- [ ] Definir categoria - CODIGO.
+- [ ] Vincular ingredientes - CODIGO via composicao de produto.
+- [ ] Produto aparece no cardapio - CODIGO via `aparece_cardapio`.
+
+Cadastro de Ingrediente:
+
+- [ ] Criar ingrediente - CODIGO.
+- [ ] Editar ingrediente - CODIGO.
+- [ ] Excluir ingrediente - CODIGO parcial: backend desativa; nao remove
+  fisicamente.
+- [ ] Definir unidade de medida - CODIGO.
+- [ ] Definir custo - FORA DO MVP.
+- [ ] Definir quantidade inicial - CODIGO.
+
+Combo:
+
+- [ ] Criar combo - CODIGO.
+- [ ] Adicionar produtos ao combo - CODIGO.
+- [ ] Editar combo - CODIGO.
+- [ ] Excluir combo - CODIGO parcial: backend desativa.
+- [ ] Vender combo - CODIGO, precisa reteste com MySQL.
+
+Promocao:
+
+- [ ] Criar promocao - CODIGO.
+- [ ] Aplicar desconto - CODIGO por preco promocional.
+- [ ] Definir validade - CODIGO por data de inicio/fim.
+- [ ] Encerrar promocao - CODIGO parcial por `ativo = false`/data fim.
+
+### Estoque
+
+Entradas:
+
+- [ ] Registrar entrada - CODIGO.
+- [ ] Atualizar quantidade - CODIGO.
+- [ ] Atualizar custo medio - FORA DO MVP.
+- [ ] Historico de entrada salvo - CODIGO.
+
+Saidas:
+
+- [ ] Baixa manual - CODIGO.
+- [ ] Baixa por venda - CODIGO, precisa reteste com MySQL.
+- [ ] Baixa por perda - CODIGO parcial: usar saida manual com motivo.
+- [ ] Historico de saida salvo - CODIGO.
+
+Controle:
+
+- [ ] Impedir estoque negativo - FORA DO MVP; regra atual permite negativo.
+- [ ] Exibir estoque atual - CODIGO.
+- [ ] Exibir custo atual - FORA DO MVP.
+- [ ] Exibir movimentacoes - CODIGO.
+- [ ] Alerta de estoque baixo - FORA DO MVP; dashboard mostra estoque negativo.
+
+### Caixa
+
+Abertura:
+
+- [ ] Abrir caixa - CODIGO via backend/menu gerencial; tela Caixa so acompanha.
+- [ ] Informar valor inicial - CODIGO.
+- [ ] Registrar operador - CODIGO.
+
+Movimentacoes:
+
+- [ ] Registrar venda dinheiro - CODIGO, precisa reteste com MySQL.
+- [ ] Registrar venda PIX - CODIGO, precisa reteste com MySQL.
+- [ ] Registrar venda cartao - CODIGO, precisa reteste com MySQL.
+- [ ] Registrar sangria - CODIGO via backend/menu gerencial.
+- [ ] Registrar suprimento - CODIGO via backend/menu gerencial.
+
+Fechamento:
+
+- [ ] Fechar caixa - CODIGO via backend/menu gerencial.
+- [ ] Exibir resumo - CODIGO.
+- [ ] Calcular diferenca - CODIGO.
+- [ ] Gerar relatorio - CODIGO parcial: relatorio gerencial de produtos vendidos.
+
+### PDV
+
+Venda:
+
+- [ ] Iniciar venda - CODIGO quando existe caixa aberto.
+- [ ] Adicionar produto - CODIGO.
+- [ ] Alterar quantidade - CODIGO.
+- [ ] Remover produto - CODIGO.
+- [ ] Aplicar desconto - CODIGO parcial: backend aceita desconto por item, mas
+  o PDV nao possui controle visual de desconto.
+- [ ] Cancelar venda - CODIGO parcial: limpa pedido antes de finalizar; depois
+  de finalizado usa status `cancelado`.
+- [ ] Finalizar venda - CODIGO, precisa reteste com MySQL.
+
+Pagamento:
+
+- [ ] Dinheiro - CODIGO.
+- [ ] PIX - CODIGO.
+- [ ] Cartao debito - CODIGO.
+- [ ] Cartao credito - CODIGO.
+- [ ] Multiplas formas de pagamento - PENDENTE, o PDV aceita uma forma por
+  venda.
+
+Integracoes:
+
+- [ ] Baixa estoque automatica - CODIGO, precisa reteste com MySQL.
+- [ ] Gera pedido automaticamente - CODIGO, precisa reteste com MySQL.
+- [ ] Registra no caixa - CODIGO, precisa reteste com MySQL.
+- [ ] Atualiza relatorios - CODIGO parcial via relatorio gerencial.
+
+### Pedidos
+
+Gestao:
+
+- [ ] Criar pedido - CODIGO via PDV/API.
+- [ ] Editar pedido - PENDENTE, tela altera status; nao edita itens/dados.
+- [ ] Cancelar pedido - CODIGO por status `cancelado`.
+- [ ] Alterar status - CODIGO.
+
+Status:
+
+- [ ] Recebido - CODIGO como status `novo`.
+- [ ] Em preparo - CODIGO.
+- [ ] Pronto - CODIGO.
+- [ ] Entregue - CODIGO.
+- [ ] Cancelado - CODIGO em Pedidos/Gerencial; Cozinha nao lista cancelados.
+
+Validacoes:
+
+- [ ] Historico de status - PENDENTE, nao ha tabela/historico dedicado.
+- [ ] Horario registrado - CODIGO por `criado_em`/`atualizado_em`.
+- [ ] Responsavel registrado - CODIGO parcial por `usuario_id`.
+
+### Cozinha
+
+Recebimento:
+
+- [ ] Pedido aparece automaticamente - CODIGO via listagem; tempo real precisa
+  reteste/manual.
+- [ ] Exibe produtos corretamente - CODIGO.
+- [ ] Exibe observacoes - CODIGO.
+
+Producao:
+
+- [ ] Iniciar preparo - CODIGO.
+- [ ] Alterar para pronto - CODIGO.
+- [ ] Atualizar painel em tempo real - PENDENTE; tela usa carregamento via API,
+  nao websocket/SSE.
+
+### Usuarios
+
+Controle de Acesso:
+
+- [ ] Administrador - CODIGO.
+- [ ] Gerente - CODIGO.
+- [ ] Caixa - PENDENTE como perfil separado; regra atual usa `vendedor` e
+  permissoes de caixa/gerencial.
+- [ ] Cozinha - CODIGO.
+
+Seguranca:
+
+- [ ] Login - BLOQUEADO nesta rodada por MySQL local.
+- [ ] Logout - CODIGO.
+- [ ] Troca de senha - CODIGO.
+- [ ] Bloqueio de acesso indevido - CODIGO, precisa reteste com MySQL.
+
+### Teste de Integracao Completa
+
+Fluxo completo:
+
+- [ ] Abrir caixa - BLOQUEADO por MySQL local.
+- [ ] Criar pedido - BLOQUEADO por MySQL local.
+- [ ] Adicionar produtos - BLOQUEADO por MySQL local para validacao ponta a
+  ponta.
+- [ ] Finalizar venda - BLOQUEADO por MySQL local.
+- [ ] Registrar pagamento - BLOQUEADO por MySQL local.
+- [ ] Pedido aparece na cozinha - BLOQUEADO por MySQL local.
+- [ ] Cozinha altera para pronto - BLOQUEADO por MySQL local.
+- [ ] Estoque e baixado - BLOQUEADO por MySQL local.
+- [ ] Caixa registra valor - BLOQUEADO por MySQL local.
+- [ ] Relatorios atualizados - BLOQUEADO por MySQL local.
+- [ ] Fechar caixa sem erros - BLOQUEADO por MySQL local.
+
+Resultado final:
+
+- [ ] Sistema aprovado para uso - PENDENTE ate corrigir MySQL e rodar smoke
+  completo.
+- [x] Sistema necessita correcoes - SIM: corrigir acesso local ao MySQL e
+  decidir se itens fora do MVP entram em nova fase.
 
 ## Regra atual de estoque
 
@@ -58,6 +285,7 @@ Depois da venda: -100 gr
 - [x] Receita com ingrediente duplicado foi agrupada sem erro
   `produto_ingredientes.uk_produto_ingrediente`.
 - [x] Venda com estoque insuficiente foi concluida.
+- [ ] Venda com estoque insuficiente exige autorizacao gerencial para liberar (fluxo de melhoria)
 - [x] Estoque ficou negativo no smoke test.
 - [x] Resposta de pedido retornou aviso de estoque negativo.
 - [x] `frontend/src` ficou sem uso ativo de `alert`, `confirm`, `prompt` ou
@@ -254,3 +482,48 @@ Checar mensagens nativas no frontend:
 ```bash
 rg -n "\b(alert|confirm|prompt)\s*\(|window\." frontend/src
 ```
+
+## Checklist de Estabilidade do Sistema
+
+- Banco de Dados
+  - Garantir inicialização consistente do MySQL antes do backend.
+  - Verificar usuário e permissões no banco antes de iniciar a API.
+  - Usar fallback de conexão socket/host para suportar diferentes ambientes.
+  - Rodar migrations/schema/seed automaticamente em ambientes novos.
+  - Monitorar erros de conexão e retornar mensagens claras.
+
+- Backend
+  - Verificar conexão com o banco na inicialização e evitar falhas silenciosas.
+  - Implementar tratamento de exceções em todas as rotas críticas.
+  - Usar pool de conexões com limites apropriados.
+  - Desacoplar lógicas de negócios e acesso a dados em serviços/repositórios.
+  - Manter logs de erro e startup para debug rápido.
+
+- Autenticação
+  - Validar token JWT em todas as rotas protegidas.
+  - Garantir que login/alterar senha retornem erros claros.
+  - Tratar usuários inativos corretamente.
+  - Evitar uso de senhas fracas em ambiente de produção.
+
+- Frontend
+  - Validar respostas da API antes de renderizar dados.
+  - Mostrar mensagem amigável quando a API não estiver disponível.
+  - Implementar fallback para conexões lentas ou falhas temporárias.
+  - Evitar estados inconsistentes ao atualizar listas ou formulários.
+
+- Operação
+  - Documentar comandos de start/stop e pré-requisitos do ambiente.
+  - Ter um script de verificação de dependências (MySQL, porta backend, frontend).
+  - Reduzir dependências de ambiente específico (snap/mysql-strict).
+  - Usar variáveis de ambiente para configurar host, porta e conexão do banco.
+
+- Testes e validação
+  - Executar smoke test após iniciar o backend.
+  - Validar `GET /api/health` e rota de login regularmente.
+  - Garantir que as tabelas essenciais (`usuarios`, `itens`, `pedidos`) existam.
+  - Revalidar o fluxo de abertura de caixa e pedido básico após a implantação.
+
+- Documentação
+  - Atualizar README com instruções de instalação e execução.
+  - Documentar a configuração local do MySQL e os valores do `.env`.
+  - Manter um checklist de estabilidade visível no repositório.

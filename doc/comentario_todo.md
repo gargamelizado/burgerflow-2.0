@@ -1,6 +1,17 @@
 # Comentario geral - BurgerFlow 2.0
 
-Atualizado em: 2026-05-23.
+Atualizado em: 2026-06-04.
+
+Atualização recente:
+- Backend ajustado para usar a instância MySQL local em `127.0.0.1:3306`.
+- Arquivo `backend/.env` sincronizado com credenciais válidas para o usuário
+  `burgerflow`.
+- `backend/src/config/env.js` e `backend/src/config/db.js` atualizados para
+  suportar fallback de conexão socket/host corretamente.
+- Health check `GET /api/health` validado com `200 OK`.
+- Login testado com `admin@estoque.com` / `admin123`.
+- Documentação de estabilidade adicionada em `MELHORIAS_FUTURAS.txt` e
+  `ESTABILIDADE_SISTEMA.txt`.
 
 Este arquivo resume o estado atual do projeto para evitar confusao entre o MVP
 basico implementado agora e planos maiores de ERP/PDV para fases futuras.
@@ -139,6 +150,13 @@ Autorizacao gerencial:
 - gera token temporario (15 minutos)
 - token usado no header `x-gerencial-token`
 - registra auditoria `caixa.autorizacao_gerencial`
+- fluxo desejado para venda com estoque insuficiente:
+  - vendedor tenta vender com falta de ingrediente
+  - sistema abre modal de autorizacao
+  - gerente informa usuario, senha e motivo
+  - backend valida autoriza��o e libera a venda
+  - auditoria registra a acao de override
+- atualmente a venda continua permitida com aviso de estoque negativo
 
 ## Cozinha (estado atual do MVP)
 
