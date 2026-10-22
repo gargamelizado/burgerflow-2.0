@@ -86,7 +86,7 @@ Na raiz do repositório:
 npm run dev
 ```
 
-Esse comando inicia o backend e o frontend em conjunto. Por padrão:
+Esse comando inicia  o backend e o frontend em conjunto. Por padrão:
 
 - Frontend: <http://localhost:5173>
 - API: <http://localhost:3006>
