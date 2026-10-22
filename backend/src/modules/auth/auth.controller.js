@@ -18,6 +18,7 @@ const alterarSenha = async (req, res) => {
     usuario_id: req.user?.id,
     senha_atual: req.body?.senha_atual,
     nova_senha: req.body?.nova_senha,
+    ip_address: req.ip,
   });
 
   return res.json(result);

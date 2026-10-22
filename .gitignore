@@ -1,5 +1,5 @@
 leiame.md
-
+.vscode
 prioridade.md
 .mysql-data/
 .mysql-run/
@@ -11,3 +11,5 @@ backend/doc/mapa-rotas-backend.txt
 doc/comentario_todo.md
 frontend/doc/comentario_frontend.md
 ESTABILIDADE_SISTEMA.txt
+/doc
+node_modules/

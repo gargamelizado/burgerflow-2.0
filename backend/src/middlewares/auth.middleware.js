@@ -1,21 +1,18 @@
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
+const { AppError } = require('./error.middleware');
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({
-      message: 'Token não informado.',
-    });
+    return next(new AppError('Token não informado.', 401, 'UNAUTHORIZED'));
   }
 
   const [type, token] = authHeader.split(' ');
 
   if (type !== 'Bearer' || !token) {
-    return res.status(401).json({
-      message: 'Token inválido.',
-    });
+    return next(new AppError('Token inválido.', 401, 'UNAUTHORIZED'));
   }
 
   try {
@@ -25,9 +22,7 @@ const authenticateToken = (req, res, next) => {
 
     return next();
   } catch (error) {
-    return res.status(401).json({
-      message: 'Token inválido ou expirado.',
-    });
+    return next(new AppError('Token inválido ou expirado.', 401, 'UNAUTHORIZED'));
   }
 };
 
@@ -38,9 +33,9 @@ const requireAccess = (allowedLevels = []) => {
     const userLevel = req.user?.nivel_acesso;
 
     if (!userLevel || !levels.includes(userLevel)) {
-      return res.status(403).json({
-        message: 'Acesso restrito para este perfil.',
-      });
+      return next(
+        new AppError('Acesso restrito para este perfil.', 403, 'FORBIDDEN')
+      );
     }
 
     return next();

@@ -12,6 +12,7 @@ const create = async (req, res) => {
     usuario_id: req.user?.id || null,
     usuario_nivel_acesso: req.user?.nivel_acesso || null,
     gerencial_token: req.headers['x-gerencial-token'] || null,
+    ip_address: req.ip,
   });
 
   return res.status(201).json(pedido);
@@ -21,7 +22,10 @@ const updateStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const pedido = await orderService.updateStatus(id, status);
+  const pedido = await orderService.updateStatus(id, status, {
+    actorUserId: req.user?.id,
+    ipAddress: req.ip,
+  });
 
   return res.json(pedido);
 };
@@ -32,6 +36,7 @@ const correctStatus = async (req, res) => {
     status: req.body?.status,
     actorUserId: req.user?.id,
     actorUserLevel: req.user?.nivel_acesso,
+    ipAddress: req.ip,
   });
 
   return res.json(result);

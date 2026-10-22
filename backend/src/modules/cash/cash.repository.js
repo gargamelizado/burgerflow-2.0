@@ -67,7 +67,7 @@ const listOpen = async (connection) => {
   return rows;
 };
 
-const findById = async (id, connection) => {
+const findById = async (id, connection, forUpdate = false) => {
   const [rows] = await executor(connection).query(
     `
     SELECT
@@ -98,6 +98,7 @@ const findById = async (id, connection) => {
     LEFT JOIN usuarios uf ON uf.id = c.usuario_fechamento_id
     LEFT JOIN usuarios ug ON ug.id = c.gerente_autorizador_id
     WHERE c.id = ?
+    ${forUpdate ? 'FOR UPDATE' : ''}
     `,
     [id]
   );

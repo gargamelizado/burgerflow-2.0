@@ -12,8 +12,18 @@ gerencial.
 
 Atualizacoes recentes:
 
-- Backend validado com `GET /api/health` e resposta `200 OK`.
+- `GET /api/health` valida a API e a conexao MySQL; retorna `503` se o banco
+  estiver indisponivel.
 - `backend/.env` ajustado para conectar ao MySQL local em `127.0.0.1:3306`.
+- `src/server.js` inicia o MySQL portatil no Windows quando necessario e
+  revalida a conexao periodicamente para recuperar uma queda durante a execucao.
+- Antes de abrir a porta da API, aplica as migracoes em `backend/migrations`
+  que ainda nao constam em `schema_migrations`.
+- Login e autorizacao gerencial possuem limite de tentativas; login e troca de
+  senha validam o payload com Zod.
+- A troca de senha e registrada em `auditoria` na mesma transacao que atualiza
+  o hash.
+- `JWT_SECRET` deve ser configurado no ambiente; nao existe segredo de fallback.
 - `src/config/env.js` atualizado para ler `DB_HOST`, `DB_PORT`, `DB_USER`,
   `DB_PASSWORD`, `DB_NAME` e `DB_SOCKET` com fallback correto.
 - `src/config/db.js` atualizado para suportar conexao por socket ou host/porta
@@ -22,13 +32,21 @@ Atualizacoes recentes:
 
 ## Entrada da aplicacao
 
-- `src/server.js`: carrega `.env`, importa `app` e escuta em
-  `process.env.PORT || 3006`.
+- `src/server.js`: valida ou inicia o MySQL antes de escutar em
+  `process.env.PORT || 3006`; monitora a conexao em intervalos de 10 segundos.
 - `src/app.js`: configura `cors`, `express.json`, health check, rotas da API,
   404 e middleware de erro.
 - `src/config/env.js`: define porta, banco, segredo JWT e opcional socket.
 - `src/config/db.js`: cria pool MySQL com suporte a socket/host e testa a
   conexao na inicializacao.
+- A inicializacao automatica do MySQL portatil depende de `mysqld.exe` e
+  `my.ini` em `%LOCALAPPDATA%`; `BURGERFLOW_MYSQL_DIR` permite configurar outra
+  pasta de instalacao.
+- O boot inicia o servidor MySQL, mas nao cria o banco nem aplica
+  `databases/schema.sql` ou as migracoes; essa preparacao e feita uma vez antes
+  da primeira execucao.
+- O comando `npm test --prefix backend` executa testes automatizados de health
+  check, validacao, rate limit, RBAC e controle de migracoes.
 - `src/middlewares/auth.middleware.js`: valida `Authorization: Bearer <token>`.
 - `src/middlewares/error.middleware.js`: devolve erro sempre em JSON.
 

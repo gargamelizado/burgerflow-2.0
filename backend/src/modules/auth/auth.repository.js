@@ -40,8 +40,8 @@ const findById = async (id) => {
   return rows[0];
 };
 
-const updatePassword = async (id, senha_hash) => {
-  await db.query(
+const updatePassword = async (id, senha_hash, connection = db) => {
+  await connection.query(
     `
     UPDATE usuarios
     SET senha_hash = ?

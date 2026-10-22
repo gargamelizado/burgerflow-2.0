@@ -1,4 +1,5 @@
 const db = require('../../config/db');
+const { AppError } = require('../../middlewares/error.middleware');
 const orderRepository = require('./order.repository');
 const productRepository = require('../products/product.repository');
 const {
@@ -7,6 +8,7 @@ const {
   mergeIngredientes,
 } = require('./orderStock.service');
 const managementService = require('../management/management.service');
+const { logAuditAction } = require('../../services/audit.service');
 const { toNumber } = require('../../utils/itemRules');
 
 const statusPermitidos = ['novo', 'em_preparo', 'pronto', 'entregue', 'cancelado'];
@@ -23,7 +25,7 @@ const getItemPrice = async (item, connection) => {
     );
 
     if (!promocao || !promocao.ativo) {
-      const error = new Error(`Promoção ${item.nome} não está ativa.`);
+      const error = new AppError(`Promoção ${item.nome} não está ativa.`);
       error.statusCode = 400;
       throw error;
     }
@@ -44,7 +46,7 @@ const getItemPrice = async (item, connection) => {
 
 const normalizeOrderItems = async (itens = [], connection) => {
   if (!Array.isArray(itens) || itens.length === 0) {
-    const error = new Error('Pedido precisa ter pelo menos 1 item.');
+    const error = new AppError('Pedido precisa ter pelo menos 1 item.');
     error.statusCode = 400;
     throw error;
   }
@@ -59,7 +61,7 @@ const normalizeOrderItems = async (itens = [], connection) => {
     const quantidade = toNumber(itemPedido.quantidade);
 
     if (!itemId || quantidade <= 0) {
-      const error = new Error('Item do pedido e quantidade são obrigatórios.');
+      const error = new AppError('Item do pedido e quantidade são obrigatórios.');
       error.statusCode = 400;
       throw error;
     }
@@ -67,13 +69,13 @@ const normalizeOrderItems = async (itens = [], connection) => {
     const item = await productRepository.findBaseById(itemId, connection);
 
     if (!item || !item.ativo) {
-      const error = new Error('Item do pedido não encontrado ou inativo.');
+      const error = new AppError('Item do pedido não encontrado ou inativo.');
       error.statusCode = 404;
       throw error;
     }
 
     if (item.tipo === 'INGREDIENTE') {
-      const error = new Error('Ingrediente não pode ser item de pedido.');
+      const error = new AppError('Ingrediente não pode ser item de pedido.');
       error.statusCode = 400;
       throw error;
     }
@@ -149,7 +151,7 @@ const validarPoliticaDeEstoque = async (
       );
 
       if (!estoque) {
-        const error = new Error(
+        const error = new AppError(
           `Ingrediente ${ingrediente.ingrediente_nome} não possui estoque cadastrado.`
         );
         error.statusCode = 400;
@@ -157,7 +159,7 @@ const validarPoliticaDeEstoque = async (
       }
 
       if (estoque.unidade_base !== ingrediente.unidade_base) {
-        const error = new Error(
+        const error = new AppError(
           `Unidade de estoque incompatível para ${estoque.ingrediente_nome}.`
         );
         error.statusCode = 400;
@@ -189,7 +191,7 @@ const validarPoliticaDeEstoque = async (
         saldoPorIngrediente.set(ingredienteId, depois);
 
         if (depois < 0 && politica === 'STRICT') {
-          const error = new Error('Estoque insuficiente para concluir a venda.');
+          const error = new AppError('Estoque insuficiente para concluir a venda.');
           error.statusCode = 409;
           throw error;
         }
@@ -218,7 +220,7 @@ const validarPoliticaDeEstoque = async (
 
   if (shortageItems.length > 0) {
     if (!gerencialToken) {
-      const error = new Error('Estoque insuficiente. Solicitar autorização gerencial?');
+      const error = new AppError('Estoque insuficiente. Solicitar autorização gerencial?');
       error.statusCode = 409;
       throw error;
     }
@@ -251,20 +253,20 @@ const create = async (data) => {
 
     const caixaId = Number(data.caixa_id);
     if (!Number.isInteger(caixaId) || caixaId <= 0) {
-      const error = new Error('caixa_id é obrigatório.');
+      const error = new AppError('caixa_id é obrigatório.');
       error.statusCode = 400;
       throw error;
     }
 
-    const caixa = await orderRepository.findCashById(caixaId, connection);
+    const caixa = await orderRepository.findCashById(caixaId, connection, true);
     if (!caixa) {
-      const error = new Error('Caixa não encontrado.');
+      const error = new AppError('Caixa não encontrado.');
       error.statusCode = 404;
       throw error;
     }
 
     if (String(caixa.status || '').toLowerCase() !== 'aberto') {
-      const error = new Error('Caixa fechado. Não é possível vender.');
+      const error = new AppError('Caixa fechado. Não é possível vender.');
       error.statusCode = 409;
       throw error;
     }
@@ -328,6 +330,20 @@ const create = async (data) => {
       connection
     );
     await orderRepository.incrementCashTotalSales(caixaId, total, connection);
+    await logAuditAction({
+      userId: data.usuario_id,
+      action: 'pedido.criado',
+      resource: 'pedidos',
+      ipAddress: data.ip_address,
+      details: {
+        resourceId: pedidoId,
+        numero,
+        caixa_id: caixaId,
+        total,
+        desconto,
+        itens: normalized.itens.length,
+      },
+    }, connection);
 
     await connection.commit();
 
@@ -349,58 +365,94 @@ const create = async (data) => {
   }
 };
 
-const updateStatus = async (id, status) => {
+const updateStatus = async (
+  id,
+  status,
+  { actorUserId, ipAddress, correctionLevel } = {}
+) => {
   if (!statusPermitidos.includes(status)) {
-    const error = new Error('Status de pedido inválido.');
+    const error = new AppError('Status de pedido inválido.');
     error.statusCode = 400;
     throw error;
   }
 
-  const pedido = await orderRepository.findById(id);
+  const connection = await db.getConnection();
 
-  if (!pedido) {
-    const error = new Error('Pedido não encontrado.');
-    error.statusCode = 404;
+  try {
+    await connection.beginTransaction();
+    const pedido = await orderRepository.findById(id, connection, true);
+
+    if (!pedido) {
+      const error = new AppError('Pedido não encontrado.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const updated = await orderRepository.updateStatus(id, status, connection);
+
+    if (status === 'cancelado') {
+      await logAuditAction({
+        userId: actorUserId,
+        action: 'pedido.cancelado',
+        resource: 'pedidos',
+        ipAddress,
+        details: {
+          resourceId: Number(id),
+          numero: pedido.numero,
+          status_anterior: pedido.status,
+          status_novo: status,
+        },
+      }, connection);
+    }
+
+    if (correctionLevel) {
+      await logAuditAction({
+        userId: actorUserId,
+        action: 'pedido_status_corrigido',
+        resource: 'pedidos',
+        ipAddress,
+        details: {
+          resourceId: Number(id),
+          status_anterior: pedido.status,
+          status_novo: status,
+          corrigido_por: correctionLevel,
+        },
+      }, connection);
+    }
+
+    await connection.commit();
+    return updated;
+  } catch (error) {
+    await connection.rollback();
     throw error;
+  } finally {
+    connection.release();
   }
-
-  return orderRepository.updateStatus(id, status);
 };
 
-const correctStatus = async ({ id, status, actorUserId, actorUserLevel }) => {
+const correctStatus = async ({
+  id,
+  status,
+  actorUserId,
+  actorUserLevel,
+  ipAddress,
+}) => {
   if (!['admin', 'gerente'].includes(actorUserLevel)) {
-    const error = new Error('Acesso restrito para correção de status.');
+    const error = new AppError('Acesso restrito para correção de status.');
     error.statusCode = 403;
     throw error;
   }
 
   if (!statusPermitidos.includes(status)) {
-    const error = new Error('Status de pedido inválido.');
+    const error = new AppError('Status de pedido inválido.');
     error.statusCode = 400;
     throw error;
   }
 
-  const pedido = await orderRepository.findById(id);
-
-  if (!pedido) {
-    const error = new Error('Pedido não encontrado.');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const statusAnterior = pedido.status;
-  const updated = await orderRepository.updateStatus(id, status);
-
-  await orderRepository.logAudit({
-    usuario_id: actorUserId,
-    acao: 'pedido_status_corrigido',
-    entidade: 'pedidos',
-    entidade_id: Number(id),
-    detalhes: {
-      status_anterior: statusAnterior,
-      status_novo: status,
-      corrigido_por: actorUserLevel,
-    },
+  const updated = await updateStatus(id, status, {
+    actorUserId,
+    ipAddress,
+    correctionLevel: actorUserLevel,
   });
 
   return {

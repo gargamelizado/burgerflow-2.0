@@ -11,6 +11,11 @@ Frontend React + Vite do BurgerFlow 2.0.
 
 ## Como rodar
 
+Na raiz do repositorio, `npm run dev` inicia o backend e o frontend juntos.
+O backend espera pelo MySQL antes de aceitar requisicoes; no Windows, tenta
+iniciar a instalacao portatil configurada para o BurgerFlow. Se o backend
+falhar, o frontend tambem e encerrado para evitar uma tela funcionando sem API.
+
 Instale dependencias:
 
 ```bash
@@ -29,7 +34,9 @@ Por padrao os services chamam a API em:
 http://localhost:3006/api
 ```
 
-Antes de testar as telas, suba o backend e aplique o schema/migracao do banco.
+Antes de testar as telas, configure o banco e aplique o schema/migracoes. O
+endpoint `http://localhost:3006/api/health` confirma que a API e o MySQL estao
+disponiveis.
 
 ## Scripts
 

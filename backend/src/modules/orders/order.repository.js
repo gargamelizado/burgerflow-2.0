@@ -63,7 +63,7 @@ const getNextNumber = async (connection) => {
   return rows[0].proximo_numero;
 };
 
-const findById = async (id, connection) => {
+const findById = async (id, connection, forUpdate = false) => {
   const [rows] = await executor(connection).query(
     `
     SELECT
@@ -83,6 +83,7 @@ const findById = async (id, connection) => {
       atualizado_em
     FROM pedidos
     WHERE id = ?
+    ${forUpdate ? 'FOR UPDATE' : ''}
     `,
     [id]
   );
@@ -159,8 +160,8 @@ const createItems = async (pedidoId, itens, connection) => {
   );
 };
 
-const updateStatus = async (id, status) => {
-  await db.query(
+const updateStatus = async (id, status, connection) => {
+  await executor(connection).query(
     `
     UPDATE pedidos
     SET status = ?
@@ -169,7 +170,7 @@ const updateStatus = async (id, status) => {
     [status, id]
   );
 
-  return findById(id);
+  return findById(id, connection);
 };
 
 const findOpenCash = async (connection) => {
@@ -187,7 +188,7 @@ const findOpenCash = async (connection) => {
   return rows[0] || null;
 };
 
-const findCashById = async (caixaId, connection) => {
+const findCashById = async (caixaId, connection, forUpdate = false) => {
   const [rows] = await executor(connection).query(
     `
     SELECT
@@ -201,6 +202,7 @@ const findCashById = async (caixaId, connection) => {
     FROM caixas
     WHERE id = ?
     LIMIT 1
+    ${forUpdate ? 'FOR UPDATE' : ''}
     `,
     [caixaId]
   );

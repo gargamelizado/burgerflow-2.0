@@ -1,5 +1,8 @@
+const db = require('../../config/db');
+const { AppError } = require('../../middlewares/error.middleware');
 const cashRepository = require('./cash.repository');
 const auditRepository = require('../../repositories/audit.repository');
+const { logAuditAction } = require('../../services/audit.service');
 const managementService = require('../management/management.service');
 const {
   hasPermission,
@@ -20,7 +23,7 @@ const parseMoney = (value, fieldName) => {
   const parsed = Number(value);
 
   if (!Number.isFinite(parsed)) {
-    const error = new Error(`${fieldName} inválido.`);
+    const error = new AppError(`${fieldName} inválido.`);
     error.statusCode = 400;
     throw error;
   }
@@ -33,13 +36,13 @@ const assertAuthenticatedUser = (usuario_id, usuario_nivel_acesso) => {
   const userLevel = String(usuario_nivel_acesso || '').trim().toLowerCase();
 
   if (!Number.isInteger(userId) || userId <= 0) {
-    const error = new Error('Usuário autenticado é obrigatório.');
+    const error = new AppError('Usuário autenticado é obrigatório.');
     error.statusCode = 401;
     throw error;
   }
 
   if (!userLevel) {
-    const error = new Error('Nível de acesso do usuário é obrigatório.');
+    const error = new AppError('Nível de acesso do usuário é obrigatório.');
     error.statusCode = 401;
     throw error;
   }
@@ -120,8 +123,8 @@ const assertManagerAuthorizationWhenRequired = async ({
   };
 };
 
-const calculateCashSummary = async (caixa) => {
-  const totais = await cashRepository.summarizeByCash(caixa.id);
+const calculateCashSummary = async (caixa, connection) => {
+  const totais = await cashRepository.summarizeByCash(caixa.id, connection);
   const valorInicial = toMoney(caixa.valor_inicial);
   const totalVendas = toMoney(totais.total_vendas);
   const vendasDinheiro = toMoney(totais.vendas_dinheiro);
@@ -194,7 +197,7 @@ const getOpen = async () => {
   };
 };
 
-const open = async ({
+const openInTransaction = async ({
   usuario_id,
   usuario_nivel_acesso,
   numero,
@@ -203,7 +206,8 @@ const open = async ({
   observacao,
   gerencial_token,
   motivo_autorizacao,
-}) => {
+  ip_address,
+}, connection) => {
   const { userId, userLevel } = assertAuthenticatedUser(
     usuario_id,
     usuario_nivel_acesso
@@ -211,19 +215,22 @@ const open = async ({
   let cashNumber = Number(numero);
 
   if (!Number.isInteger(cashNumber) || cashNumber <= 0) {
-    cashNumber = await cashRepository.getNextNumber();
+    cashNumber = await cashRepository.getNextNumber(connection);
   }
 
-  const caixaMesmoNumeroAberto = await cashRepository.findOpenByNumber(cashNumber);
+  const caixaMesmoNumeroAberto = await cashRepository.findOpenByNumber(
+    cashNumber,
+    connection
+  );
   if (caixaMesmoNumeroAberto) {
-    const error = new Error('Já existe caixa aberto com este número.');
+    const error = new AppError('Já existe caixa aberto com este número.');
     error.statusCode = 409;
     throw error;
   }
 
   const valorInicialNumber = parseMoney(valor_inicial ?? 0, 'Valor inicial');
   if (valorInicialNumber < 0) {
-    const error = new Error('Valor inicial não pode ser negativo.');
+    const error = new AppError('Valor inicial não pode ser negativo.');
     error.statusCode = 400;
     throw error;
   }
@@ -245,23 +252,24 @@ const open = async ({
     operador_id: Number(operador_id) || userId,
     valor_inicial: valorInicialNumber,
     observacao: observacao || '',
-  });
+  }, connection);
 
-  await auditRepository.logAudit({
-    usuario_id: userId,
-    acao: 'caixa.aberto',
-    entidade: 'caixas',
-    entidade_id: caixa.id,
-    detalhes: {
+  await logAuditAction({
+    userId,
+    action: 'caixa.aberto',
+    resource: 'caixas',
+    ipAddress: ip_address,
+    details: {
+      resourceId: caixa.id,
       numero: cashNumber,
       operador_id: Number(operador_id) || userId,
       valor_inicial: valorInicialNumber,
       observacao: observacao || null,
       gerente_autorizador_id: authorization.gerente_autorizador_id,
     },
-  });
+  }, connection);
 
-  const resumo = await calculateCashSummary(caixa);
+  const resumo = await calculateCashSummary(caixa, connection);
 
   return {
     message: 'Caixa aberto com sucesso.',
@@ -273,7 +281,23 @@ const open = async ({
   };
 };
 
-const closeById = async ({
+const open = async (payload) => {
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const result = await openInTransaction(payload, connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+const closeByIdInTransaction = async ({
   caixa_id,
   usuario_id,
   usuario_nivel_acesso,
@@ -281,42 +305,43 @@ const closeById = async ({
   observacao,
   gerencial_token,
   motivo_autorizacao,
-}) => {
+  ip_address,
+}, connection) => {
   const { userId, userLevel } = assertAuthenticatedUser(
     usuario_id,
     usuario_nivel_acesso
   );
   const cashId = Number(caixa_id);
   if (!Number.isInteger(cashId) || cashId <= 0) {
-    const error = new Error('ID do caixa inválido.');
+    const error = new AppError('ID do caixa inválido.');
     error.statusCode = 400;
     throw error;
   }
 
-  const caixa = await cashRepository.findById(cashId);
+  const caixa = await cashRepository.findById(cashId, connection, true);
   if (!caixa) {
-    const error = new Error('Caixa não encontrado.');
+    const error = new AppError('Caixa não encontrado.');
     error.statusCode = 404;
     throw error;
   }
 
   if (String(caixa.status || '').toLowerCase() !== 'aberto') {
-    const error = new Error('Caixa já está fechado.');
+    const error = new AppError('Caixa já está fechado.');
     error.statusCode = 409;
     throw error;
   }
 
   const valorFinalNumber = parseMoney(valor_final, 'Valor final');
   if (valorFinalNumber < 0) {
-    const error = new Error('Valor final não pode ser negativo.');
+    const error = new AppError('Valor final não pode ser negativo.');
     error.statusCode = 400;
     throw error;
   }
 
-  const resumo = await calculateCashSummary(caixa);
+  const resumo = await calculateCashSummary(caixa, connection);
   const diferenca = toMoney(valorFinalNumber - resumo.valor_esperado);
   if (diferenca !== 0 && !String(observacao || '').trim()) {
-    const error = new Error('Informe uma observação para fechamento com diferença.');
+    const error = new AppError('Informe uma observação para fechamento com diferença.');
     error.statusCode = 400;
     throw error;
   }
@@ -359,36 +384,44 @@ const closeById = async ({
     observacao: observacao || '',
     usuario_fechamento_id: userId,
     gerente_autorizador_id: authorization.gerente_autorizador_id,
-  });
+  }, connection);
 
-  await auditRepository.logAudit({
-    usuario_id: userId,
-    acao: 'caixa.fechado',
-    entidade: 'caixas',
-    entidade_id: cashId,
-    detalhes: {
+  if (!fechado) {
+    const error = new AppError('Caixa já foi fechado por outra operação.');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  await logAuditAction({
+    userId,
+    action: 'caixa.fechado',
+    resource: 'caixas',
+    ipAddress: ip_address,
+    details: {
+      resourceId: cashId,
       valor_esperado: resumo.valor_esperado,
       valor_final: valorFinalNumber,
       diferenca,
       observacao: observacao || null,
       gerente_autorizador_id: authorization.gerente_autorizador_id,
     },
-  });
+  }, connection);
 
   if (diferenca !== 0) {
-    await auditRepository.logAudit({
-      usuario_id: userId,
-      acao: 'caixa.fechamento_com_diferenca',
-      entidade: 'caixas',
-      entidade_id: cashId,
-      detalhes: {
+    await logAuditAction({
+      userId,
+      action: 'caixa.fechamento_com_diferenca',
+      resource: 'caixas',
+      ipAddress: ip_address,
+      details: {
+        resourceId: cashId,
         valor_esperado: resumo.valor_esperado,
         valor_final: valorFinalNumber,
         diferenca,
         observacao: observacao || null,
         gerente_autorizador_id: authorization.gerente_autorizador_id,
       },
-    });
+    }, connection);
   }
 
   return {
@@ -406,11 +439,27 @@ const closeById = async ({
   };
 };
 
+const closeById = async (payload) => {
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const result = await closeByIdInTransaction(payload, connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
 const close = async (payload) => {
   const caixasAbertos = await cashRepository.listOpen();
 
   if (!caixasAbertos.length) {
-    const error = new Error('Nenhum caixa aberto encontrado.');
+    const error = new AppError('Nenhum caixa aberto encontrado.');
     error.statusCode = 404;
     throw error;
   }
@@ -421,7 +470,7 @@ const close = async (payload) => {
   });
 };
 
-const createMovement = async ({
+const createMovementInTransaction = async ({
   caixa_id,
   usuario_id,
   usuario_nivel_acesso,
@@ -430,56 +479,57 @@ const createMovement = async ({
   motivo,
   gerencial_token,
   motivo_autorizacao,
-}) => {
+  ip_address,
+}, connection) => {
   const { userId, userLevel } = assertAuthenticatedUser(
     usuario_id,
     usuario_nivel_acesso
   );
   const cashId = Number(caixa_id);
   if (!Number.isInteger(cashId) || cashId <= 0) {
-    const error = new Error('caixa_id é obrigatório para movimentação.');
+    const error = new AppError('caixa_id é obrigatório para movimentação.');
     error.statusCode = 400;
     throw error;
   }
 
-  const caixa = await cashRepository.findById(cashId);
+  const caixa = await cashRepository.findById(cashId, connection, true);
   if (!caixa) {
-    const error = new Error('Caixa não encontrado.');
+    const error = new AppError('Caixa não encontrado.');
     error.statusCode = 404;
     throw error;
   }
   if (String(caixa.status || '').toLowerCase() !== 'aberto') {
-    const error = new Error('Caixa fechado.');
+    const error = new AppError('Caixa fechado.');
     error.statusCode = 409;
     throw error;
   }
 
   if (!['suprimento', 'sangria'].includes(tipo)) {
-    const error = new Error('Tipo de movimentação inválido.');
+    const error = new AppError('Tipo de movimentação inválido.');
     error.statusCode = 400;
     throw error;
   }
 
   const motivoNormalizado = String(motivo || '').trim();
   if (!motivoNormalizado) {
-    const error = new Error('Motivo é obrigatório.');
+    const error = new AppError('Motivo é obrigatório.');
     error.statusCode = 400;
     throw error;
   }
 
   const valorNumber = parseMoney(valor, 'Valor');
   if (valorNumber <= 0) {
-    const error = new Error('Valor deve ser maior que zero.');
+    const error = new AppError('Valor deve ser maior que zero.');
     error.statusCode = 400;
     throw error;
   }
 
   const action = tipo === 'sangria' ? 'registrar_sangria' : 'registrar_suprimento';
-  const resumoAntes = await calculateCashSummary(caixa);
+  const resumoAntes = await calculateCashSummary(caixa, connection);
   if (tipo === 'sangria' && valorNumber > resumoAntes.valor_esperado) {
     const hasDirectManagerAccess = isManagementLevel(userLevel);
     if (!hasDirectManagerAccess && !gerencial_token) {
-      const error = new Error(
+      const error = new AppError(
         'Sangria maior que o valor disponível exige autorização gerencial.'
       );
       error.statusCode = 403;
@@ -505,25 +555,26 @@ const createMovement = async ({
     tipo,
     valor: valorNumber,
     motivo: motivoNormalizado,
-  });
+  }, connection);
 
   const [movimentos, resumo] = await Promise.all([
-    cashRepository.listMovementsByCash(cashId),
-    calculateCashSummary(caixa),
+    cashRepository.listMovementsByCash(cashId, connection),
+    calculateCashSummary(caixa, connection),
   ]);
 
-  await auditRepository.logAudit({
-    usuario_id: userId,
-    acao: tipo === 'sangria' ? 'caixa.sangria' : 'caixa.suprimento',
-    entidade: 'caixas',
-    entidade_id: cashId,
-    detalhes: {
+  await logAuditAction({
+    userId,
+    action: tipo === 'sangria' ? 'caixa.sangria' : 'caixa.suprimento',
+    resource: 'caixas',
+    ipAddress: ip_address,
+    details: {
+      resourceId: cashId,
       tipo,
       valor: valorNumber,
       motivo: motivoNormalizado,
       gerente_autorizador_id: authorization.gerente_autorizador_id,
     },
-  });
+  }, connection);
 
   return {
     message:
@@ -536,12 +587,28 @@ const createMovement = async ({
   };
 };
 
+const createMovement = async (payload) => {
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const result = await createMovementInTransaction(payload, connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
 const listMovements = async (caixa_id = null) => {
   const cashId = Number(caixa_id);
   if (Number.isInteger(cashId) && cashId > 0) {
     const caixa = await cashRepository.findById(cashId);
     if (!caixa) {
-      const error = new Error('Caixa não encontrado.');
+      const error = new AppError('Caixa não encontrado.');
       error.statusCode = 404;
       throw error;
     }
@@ -598,7 +665,7 @@ const listOpenCashes = async () => {
 const getById = async (id) => {
   const caixa = await cashRepository.findById(id);
   if (!caixa) {
-    const error = new Error('Caixa não encontrado.');
+    const error = new AppError('Caixa não encontrado.');
     error.statusCode = 404;
     throw error;
   }
@@ -614,7 +681,7 @@ const getById = async (id) => {
 const listSalesByCash = async (caixaId) => {
   const caixa = await cashRepository.findById(caixaId);
   if (!caixa) {
-    const error = new Error('Caixa não encontrado.');
+    const error = new AppError('Caixa não encontrado.');
     error.statusCode = 404;
     throw error;
   }
@@ -637,7 +704,7 @@ const openManyForTest = async ({
 }) => {
   const qty = Number(quantidade);
   if (!Number.isInteger(qty) || qty <= 0) {
-    const error = new Error('Quantidade inválida para abrir caixas de teste.');
+    const error = new AppError('Quantidade inválida para abrir caixas de teste.');
     error.statusCode = 400;
     throw error;
   }
@@ -681,7 +748,7 @@ const sellInCashesForTest = async ({
   assertAuthenticatedUser(usuario_id, usuario_nivel_acesso);
 
   if (!Array.isArray(vendas) || vendas.length === 0) {
-    const error = new Error('Informe vendas para simulação.');
+    const error = new AppError('Informe vendas para simulação.');
     error.statusCode = 400;
     throw error;
   }

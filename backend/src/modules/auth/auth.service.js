@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const env = require('../../config/env');
+const db = require('../../config/db');
+const { logAuditAction } = require('../../services/audit.service');
 const authRepository = require('./auth.repository');
 
 const login = async ({ email, senha, password }) => {
@@ -58,7 +60,12 @@ const login = async ({ email, senha, password }) => {
   };
 };
 
-const alterarSenha = async ({ usuario_id, senha_atual, nova_senha }) => {
+const alterarSenha = async ({
+  usuario_id,
+  senha_atual,
+  nova_senha,
+  ip_address = null,
+}) => {
   const userId = Number(usuario_id);
 
   if (!Number.isInteger(userId) || userId <= 0) {
@@ -96,7 +103,32 @@ const alterarSenha = async ({ usuario_id, senha_atual, nova_senha }) => {
   }
 
   const novoHash = await bcrypt.hash(nova_senha, 10);
-  await authRepository.updatePassword(userId, novoHash);
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    await authRepository.updatePassword(userId, novoHash, connection);
+    await logAuditAction(
+      {
+        userId,
+        action: 'auth.password_changed',
+        resource: 'usuarios',
+        details: { resourceId: userId },
+        ipAddress: ip_address,
+      },
+      connection
+    );
+    await connection.commit();
+  } catch (error) {
+    try {
+      await connection.rollback();
+    } catch (rollbackError) {
+      console.error('[AUTH_PASSWORD_ROLLBACK_ERROR]', rollbackError);
+    }
+    throw error;
+  } finally {
+    connection.release();
+  }
 
   return {
     message: 'Senha alterada com sucesso.',

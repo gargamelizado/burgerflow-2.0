@@ -35,6 +35,7 @@ const authorize = async ({
   entidade,
   registro_id,
   valor,
+  ip_address = null,
 }) => {
   const requesterId = Number(solicitante_id);
 
@@ -110,6 +111,7 @@ const authorize = async ({
       motivo: reason || null,
       valor: valor ?? null,
     },
+    ip_address,
   });
 
   return {
@@ -193,4 +195,3 @@ module.exports = {
   authorize,
   validateAuthorizationToken,
 };
-

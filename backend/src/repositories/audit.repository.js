@@ -6,6 +6,7 @@ const logAudit = async ({
   entidade = null,
   entidade_id = null,
   detalhes = null,
+  ip_address = null,
 }) => {
   await db.query(
     `
@@ -14,8 +15,9 @@ const logAudit = async ({
       acao,
       entidade,
       entidade_id,
-      detalhes
-    ) VALUES (?, ?, ?, ?, ?)
+      detalhes,
+      ip_address
+    ) VALUES (?, ?, ?, ?, ?, ?)
     `,
     [
       usuario_id || null,
@@ -23,6 +25,7 @@ const logAudit = async ({
       entidade || null,
       entidade_id || null,
       detalhes ? JSON.stringify(detalhes) : null,
+      ip_address,
     ]
   );
 };
@@ -30,4 +33,3 @@ const logAudit = async ({
 module.exports = {
   logAudit,
 };
-

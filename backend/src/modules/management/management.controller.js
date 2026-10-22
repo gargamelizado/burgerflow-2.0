@@ -14,6 +14,7 @@ const authorize = async (req, res) => {
     entidade: req.body?.entidade,
     registro_id: req.body?.registro_id,
     valor: req.body?.valor,
+    ip_address: req.ip,
   });
 
   return res.json(result);
@@ -22,4 +23,3 @@ const authorize = async (req, res) => {
 module.exports = {
   authorize,
 };
-

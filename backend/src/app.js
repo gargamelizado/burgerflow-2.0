@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const errorMiddleware = require('./middlewares/error.middleware');
+const { AppError } = errorMiddleware;
+const db = require('./config/db');
+const asyncHandler = require('./utils/asyncHandler');
 const authRoutes = require('./modules/auth/auth.routes');
 const productRoutes = require('./modules/products/product.routes');
 const createItemTypeRoutes = require('./modules/products/itemType.routes');
@@ -16,11 +19,31 @@ const kitchenRoutes = require('./modules/kitchen/kitchen.routes');
 app.use(cors());
 app.use(express.json());
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    message: 'API BurgerFlow funcionando',
-  });
-});
+app.get(
+  '/api/health',
+  asyncHandler(async (req, res) => {
+    try {
+      await db.testConnection();
+    } catch (error) {
+      if (
+        ['ECONNREFUSED', 'ETIMEDOUT', 'EHOSTUNREACH'].includes(error.code)
+      ) {
+        throw new AppError(
+          'Banco de dados indisponível',
+          503,
+          'DATABASE_UNAVAILABLE'
+        );
+      }
+
+      throw error;
+    }
+
+    res.json({
+      message: 'API BurgerFlow funcionando',
+      database: 'connected',
+    });
+  })
+);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/itens', productRoutes);
@@ -38,10 +61,14 @@ app.use('/api/gerencial/relatorios', reportRoutes);
 app.use('/api/pedidos', orderRoutes);
 app.use('/api/cozinha', kitchenRoutes);
 
-app.use((req, res) => {
-  res.status(404).json({
-    message: `Rota não encontrada: ${req.method} ${req.originalUrl}`,
-  });
+app.use((req, res, next) => {
+  next(
+    new AppError(
+      `Rota não encontrada: ${req.method} ${req.originalUrl}`,
+      404,
+      'NOT_FOUND'
+    )
+  );
 });
 
 app.use(errorMiddleware);

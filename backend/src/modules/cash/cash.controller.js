@@ -27,6 +27,7 @@ const open = async (req, res) => {
     observacao: req.body.observacao,
     gerencial_token: getGerencialToken(req),
     motivo_autorizacao: getGerencialReason(req),
+    ip_address: req.ip,
   });
 
   return res.status(201).json(resultado);
@@ -40,6 +41,7 @@ const close = async (req, res) => {
     observacao: req.body.observacao,
     gerencial_token: getGerencialToken(req),
     motivo_autorizacao: getGerencialReason(req),
+    ip_address: req.ip,
   });
 
   return res.json(resultado);
@@ -55,13 +57,16 @@ const createMovement = async (req, res) => {
     motivo: req.body.motivo,
     gerencial_token: getGerencialToken(req),
     motivo_autorizacao: getGerencialReason(req),
+    ip_address: req.ip,
   });
 
   return res.status(201).json(resultado);
 };
 
 const listMovements = async (req, res) => {
-  const resultado = await cashService.listMovements(req.query.caixa_id);
+  const resultado = await cashService.listMovements(
+    req.validated?.query?.caixa_id ?? req.query.caixa_id
+  );
 
   return res.json(resultado);
 };
@@ -98,6 +103,7 @@ const openCashByNumber = async (req, res) => {
     observacao: req.body.observacao,
     gerencial_token: getGerencialToken(req),
     motivo_autorizacao: getGerencialReason(req),
+    ip_address: req.ip,
   });
 
   return res.status(201).json(resultado);
@@ -112,6 +118,7 @@ const closeCashById = async (req, res) => {
     observacao: req.body.observacao,
     gerencial_token: getGerencialToken(req),
     motivo_autorizacao: getGerencialReason(req),
+    ip_address: req.ip,
   });
 
   return res.json(resultado);

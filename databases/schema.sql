@@ -248,6 +248,8 @@ CREATE TABLE IF NOT EXISTS auditoria (
   entidade VARCHAR(100) NULL,
   entidade_id INT NULL,
   detalhes JSON NULL,
+  ip_address VARCHAR(45) NULL,
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_auditoria_usuario_data (usuario_id, criado_em),
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
